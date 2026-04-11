@@ -1,0 +1,92 @@
+\documentclass[a4paper,12pt]{ctexart}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{geometry}
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+\title{变厚度自由边界薄板受迫振动方程推导}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{基本假设与几何关系}
+基于 Kirchhoff-Love 薄板理论，假设中面内无变形，且变形前垂直于中面的直线在变形后仍为直线且垂直于变形后的中面。设薄板厚度为变量 $h = h(x,y)$，材料密度为 $\rho$，杨氏模量为 $E$，泊松比为 $\nu$。
+
+板的挠度（中面的法向位移）为 $w = w(x,y,t)$。
+根据几何方程，板的曲率与扭率可表示为：
+\begin{equation}
+    \kappa_x = -\frac{\partial^2 w}{\partial x^2}, \quad
+    \kappa_y = -\frac{\partial^2 w}{\partial y^2}, \quad
+    \kappa_{xy} = -\frac{\partial^2 w}{\partial x \partial y}
+\end{equation}
+
+\section{本构方程与内力}
+由于板厚 $h(x,y)$ 是空间坐标的函数，板的抗弯刚度 $D$ 也是变参数：
+\begin{equation}
+    D(x,y) = \frac{E h^3(x,y)}{12(1-\nu^2)}
+\end{equation}
+
+对厚度方向积分，可以得到弯矩 $M_x, M_y$ 和扭矩 $M_{xy}$：
+\begin{equation}
+    \begin{aligned}
+        M_x &= -D(x,y) \left( \frac{\partial^2 w}{\partial x^2} + \nu \frac{\partial^2 w}{\partial y^2} \right) \\
+        M_y &= -D(x,y) \left( \frac{\partial^2 w}{\partial y^2} + \nu \frac{\partial^2 w}{\partial x^2} \right) \\
+        M_{xy} &= -D(x,y) (1-\nu) \frac{\partial^2 w}{\partial x \partial y}
+    \end{aligned}
+\end{equation}
+
+\section{变厚度薄板受迫振动控制方程}
+取微元体进行受力分析。设横向分布载荷为 $q(x,y,t)$，惯性力为 $-\rho h(x,y) \frac{\partial^2 w}{\partial t^2}$。由微元体的动量平衡（牛顿第二定律）和角动量平衡，可得：
+\begin{equation}
+    \frac{\partial^2 M_x}{\partial x^2} + 2\frac{\partial^2 M_{xy}}{\partial x \partial y} + \frac{\partial^2 M_y}{\partial y^2} + q(x,y,t) = \rho h(x,y) \frac{\partial^2 w}{\partial t^2}
+\end{equation}
+
+将内力表达式 (3) 代入运动方程 (4) 中。需要注意的是，由于 $D$ 是 $x$ 和 $y$ 的函数，求导时必须将其作为变量处理：
+\begin{equation}
+    \begin{aligned}
+        & \frac{\partial^2}{\partial x^2} \left[ D \left( \frac{\partial^2 w}{\partial x^2} + \nu \frac{\partial^2 w}{\partial y^2} \right) \right] \\
+        + & 2 \frac{\partial^2}{\partial x \partial y} \left[ D (1-\nu) \frac{\partial^2 w}{\partial x \partial y} \right] \\
+        + & \frac{\partial^2}{\partial y^2} \left[ D \left( \frac{\partial^2 w}{\partial y^2} + \nu \frac{\partial^2 w}{\partial x^2} \right) \right] + \rho h \frac{\partial^2 w}{\partial t^2} = q(x,y,t)
+    \end{aligned}
+\end{equation}
+
+将其展开并合并同类项，得到变厚度薄板的振动控制方程的显式形式：
+\begin{equation}
+    \nabla^2 \left( D \nabla^2 w \right) - (1-\nu) \left( \frac{\partial^2 D}{\partial x^2}\frac{\partial^2 w}{\partial y^2} - 2\frac{\partial^2 D}{\partial x \partial y}\frac{\partial^2 w}{\partial x \partial y} + \frac{\partial^2 D}{\partial y^2}\frac{\partial^2 w}{\partial x^2} \right) + \rho h \frac{\partial^2 w}{\partial t^2} = q(x,y,t)
+\end{equation}
+其中，$\nabla^2 = \frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2}$ 为拉普拉斯算子。若板厚均匀（$D$ 为常数），中间的交叉项将消失，方程退化为经典的 $D\nabla^4 w + \rho h \ddot{w} = q$。
+
+\section{连续问题的算子形式：$(\mathcal{K} - \omega^2 \mathcal{M})W = Q$}
+
+从薄板受迫振动的稳态控制方程出发，设横向载荷和位移场为简谐形式 $q(x,y,t) = Q(x,y)e^{i\omega t}$，挠度为 $w(x,y,t) = W(x,y)e^{i\omega t}$。
+
+将上式代入动力学平衡方程 $\frac{\partial^2 M_x}{\partial x^2} + 2\frac{\partial^2 M_{xy}}{\partial x \partial y} + \frac{\partial^2 M_y}{\partial y^2} + Q(x,y) = -\rho h(x,y) \omega^2 W$，通过移项，我们可将其写为统一的线性算子形式：
+\begin{equation}
+    \mathcal{A} W(x,y) = Q(x,y)
+\end{equation}
+具体而言，算子 $\mathcal{A}$ 可以分解为刚度算子 $\mathcal{K}$ 和质量算子 $\mathcal{M}$ 的组合：
+\begin{equation}
+    (\mathcal{K} - \omega^2 \mathcal{M}) W(x,y) = Q(x,y)
+\end{equation}
+
+其中，\textbf{质量算子} $\mathcal{M}$ 定义为：
+\begin{equation}
+    \mathcal{M}[W] = \rho h(x,y) W
+\end{equation}
+
+\textbf{刚度算子} $\mathcal{K}$ 定义为：
+\begin{equation}
+    \mathcal{K}[W] = -\left( \frac{\partial^2 M_x(W)}{\partial x^2} + 2\frac{\partial^2 M_{xy}(W)}{\partial x \partial y} + \frac{\partial^2 M_y(W)}{\partial y^2} \right)
+\end{equation}
+将其完全展开即为：
+\begin{equation}
+    \mathcal{K}[W] = \frac{\partial^2}{\partial x^2} \left[ D \left( \frac{\partial^2 W}{\partial x^2} + \nu \frac{\partial^2 W}{\partial y^2} \right) \right] + 2 \frac{\partial^2}{\partial x \partial y} \left[ D (1-\nu) \frac{\partial^2 W}{\partial x \partial y} \right] + \frac{\partial^2}{\partial y^2} \left[ D \left( \frac{\partial^2 W}{\partial y^2} + \nu \frac{\partial^2 W}{\partial x^2} \right) \right]
+\end{equation}
+
+\section{数值离散与矩阵求解形式：$\mathbf{A}\mathbf{w} = \mathbf{q}$}
+
+\vspace{1em}
+\noindent \textbf{注：关于自由边界条件的数值处理}\\
+若采用有限元法（基于伽辽金弱形式），自由边界条件（弯矩为零、等效剪力为零）属于\textbf{自然边界条件}（Natural Boundary Conditions）。在推导系统矩阵 $\mathbf{K}$ 的弱积分形式时，利用分部积分法，自由边界上的力/力矩项会自动积分消去，无需对矩阵 $\mathbf{A}$ 或向量 $\mathbf{w}$ 施加额外的强制约束即可自然满足。
+\end{document}
