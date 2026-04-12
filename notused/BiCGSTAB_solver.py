@@ -1,6 +1,6 @@
 import warp as wp
 import numpy as np
-from energy import compute_energy_gradient_kernel
+from notused.energy import compute_energy_gradient_kernel
 from complex import complex_dot_kernel, complex_axpy_kernel
 from parameter import PlateParams
 import matplotlib.pyplot as plt
