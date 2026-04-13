@@ -8,12 +8,10 @@ def ssim_loss(display_pattern, target_pattern):
     return 1.0 - similarity_index
 
 
-def physics_informed_loss(amp, target_pattern):
-    energy_field = amp ** 2
+def physics_informed_loss(energy_field, target_pattern):
+    energy_on_lines = torch.sum(energy_field * target_pattern)
     
-    energy_on_lines = np.sum(energy_field * target_pattern)
-    
-    total_energy = np.sum(energy_field) + 1e-10
+    total_energy = torch.sum(energy_field) + 1e-10
     
     loss = energy_on_lines / total_energy
     

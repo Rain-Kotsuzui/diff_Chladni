@@ -22,12 +22,12 @@ def process_target_image_smooth(image_path: str, N: int, sigma: float = 3.0) -> 
 
 
 if __name__ == "__main__":
-    N = 128
+    N = 64
     
-    # img_test = np.ones((500, 500), dtype=np.uint8) * 255
-    # cv2.circle(img_test, (250, 250), 150, 0, 5) 
+    img_test = np.ones((500, 500), dtype=np.uint8) * 255
+    cv2.circle(img_test, (250, 250), 150, 0, 60) 
     # cv2.line(img_test, (100, 100), (400, 400), 0, 5)
-    # cv2.imwrite("temp_target.jpg", img_test)
+    cv2.imwrite("target.jpg", img_test)
 
     
     plt.figure(figsize=(5, 5), facecolor='black')

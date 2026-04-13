@@ -71,7 +71,7 @@ def main(resume_step=None,num_sources=1):
     p = PlateParams()
     p.E, p.nu, p.rho = 70.0e9, 0.33, 2700.0
     p.dx = p.dy = L / N
-    p.eta = 0.02
+    p.eta = 1e-4
 
     chladni_solver = DifferentiableDirectSolver(p, N, N)
 
@@ -87,17 +87,70 @@ def main(resume_step=None,num_sources=1):
     # init_positions = torch.rand((num_sources, 2), device="cuda").float() 
     init_positions = torch.tensor([[0.5, 0.5]], device="cuda").float()
     
-    pos_tensor = init_positions.clone().detach().requires_grad_(False).float() 
-    
+    pos_tensor = init_positions.clone().detach().requires_grad_(True).float() 
 
     target_freq = 1250.0 
     freq_tensor = torch.tensor([target_freq], device="cuda", requires_grad=True)
     
-    optimizer = optim.Adam([
-        {'params': [h_tensor], 'lr': 0.01},
-        # {'params': pos_tensor, 'lr': 2e-2},  
-        {'params': freq_tensor, 'lr': 10.0}  
-    ])
+    
+    optimizer = optim.LBFGS([h_tensor, pos_tensor, freq_tensor], 
+                         lr=2e-2, 
+                         max_iter=20, 
+                         history_size=10)
+    state = {
+        'loss': 0.0,
+        'l1': 0.0,
+        'l2': 0.0,
+        'l3': 0.0,
+        'w_complex': None,
+        'fr_np': None,
+        'curr_freq': 0.0
+    }
+    def closure():
+        optimizer.zero_grad()
+        
+        # 物理参数同步
+        h_wp = wp.from_torch(h_tensor)
+        curr_f = freq_tensor.item()
+        p.omega = 2.0 * np.pi * curr_f
+        
+        # 这里的 force_tensor 需要在 closure 内计算以便 autograd 记录
+        force_tensor = generate_gaussian_force(N, pos_tensor)
+        curr_fr_np = force_tensor.detach().cpu().numpy()
+        fr_wp = wp.from_numpy(curr_fr_np.astype(np.float32), device="cuda")
+    
+        # 求解
+        w_c = chladni_solver.solve(h_wp, fr_wp, fi_wp)
+    
+        # 计算 Loss
+        loss_val, g_wr, g_wi, l1_val, l2_val, l3_val = compute_loss_and_adjoint_force(
+            w_c.real, w_c.imag, N, target_pattern
+        )
+    
+        # 计算伴随梯度
+        grad_h, grad_fr_np, grad_omega = chladni_solver.compute_adjoint_gradient(
+            h_wp, w_c, g_wr + 1j * g_wi
+        )
+    
+        # 填充梯度
+        gh_torch = torch.from_numpy(grad_h).cuda().float().reshape(1,1,N,N)
+        gh_smooth = torch.nn.functional.avg_pool2d(gh_torch, 3, 1, 1)
+        h_tensor.grad = gh_smooth.flatten()
+        
+        # 力和频率的梯度
+        force_tensor.backward(torch.from_numpy(grad_fr_np).cuda())
+        freq_tensor.grad = torch.tensor([grad_omega * 2.0 * np.pi], device="cuda", dtype=torch.float32)
+        
+        # --- 将内部变量传出到外部 state 字典 ---
+        state['loss'] = loss_val
+        state['l1'] = l1_val
+        state['l2'] = l2_val
+        state['l3'] = l3_val
+        state['w_complex'] = w_c
+        state['fr_np'] = curr_fr_np
+        state['curr_freq'] = curr_f
+    
+        return loss_val
 
     # idx_center = (N // 2) * N + (N // 2)
 
@@ -192,69 +245,23 @@ def main(resume_step=None,num_sources=1):
             print(f"Checkpoint directory {checkpoint_dir} not found. Starting from scratch.")
     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=100, factor=0.5)
     for step in range(100000):
-        optimizer.zero_grad()
-
-        curr_freq = freq_tensor.item()
-        p.omega = 2.0 * np.pi * curr_freq
-        
-        force_tensor = generate_gaussian_force(N, pos_tensor)
-        fr_np = force_tensor.detach().cpu().numpy()
-        
-        # h_wp = wp.from_numpy(h_np, device="cuda")
-        h_wp = wp.from_torch(h_tensor)
-
-        fr_wp = wp.from_numpy(fr_np.astype(np.float32), device="cuda")
         
         try:
-            w_complex = chladni_solver.solve(h_wp, fr_wp, fi_wp)
-            wr_np, wi_np = w_complex.real, w_complex.imag
-            
-            curr_loss, g_wr, g_wi,l1,l2,l3 = compute_loss_and_adjoint_force(
-                wr_np, wi_np, N, target_pattern
-            )
-            
-            grad_w_complex = g_wr + 1j * g_wi
-
-
-            grad_h, grad_fr_np, grad_omega = chladni_solver.compute_adjoint_gradient(h_wp, w_complex, grad_w_complex)
-            
-            gh_torch = torch.from_numpy(grad_h).cuda().float().reshape(1, 1, N, N)
-            gh_smooth = torch.nn.functional.avg_pool2d(gh_torch, kernel_size=3, stride=1, padding=1)
-
-            # h_tensor.grad = torch.from_numpy(grad_h).cuda().float()
-            grad_h_norm = torch.norm(gh_smooth) + 1e-10
-            h_tensor.grad = (gh_smooth / grad_h_norm).flatten()
-
-            # 厚度 
-            # grad_norm = np.max(np.abs(grad_h)) + 1e-10
-            # h_np -= learning_rate_h * (grad_h / grad_norm) 
-
-
-            # grad_h_2d = grad_h.reshape(N, N)
-
-            # grad_h_smooth = ndimage.gaussian_filter(grad_h_2d, sigma=0.1)
-
-            # h_np -= learning_rate_h * grad_h_smooth.flatten() 
-            # h_np = np.clip(h_np, 0.000, 0.010)
-
-
-            # 位置和频率
-            # grad_fr_tensor = torch.from_numpy(grad_fr_np).cuda().float()
-            # force_tensor.backward(grad_fr_tensor)
-        
-            # 频率梯度: dL/dfreq = dL/domega * (2*pi)
-            freq_tensor.grad = torch.tensor([grad_omega * 2.0 * np.pi], device="cuda",dtype=torch.float32)
-
-            
-            # scheduler.step(curr_loss)
-            optimizer.step()
+            optimizer.step(closure)
 
             
             with torch.no_grad():
                 pos_tensor.clamp_(0.05, 0.95)
                 freq_tensor.clamp_(10.0, 20000.0)
-                h_tensor.clamp_(0.000, 0.006)
+                h_tensor.clamp_(0.0001, 0.006)
                 h_np = h_tensor.cpu().numpy()
+            curr_loss = state['loss']
+            curr_freq = state['curr_freq']
+            w_complex = state['w_complex']
+            fr_np = state['fr_np']
+            l1 = state['l1']
+            l2 = state['l2']
+            l3 = state['l3']
 
             print(f"Step {step:04d} | Loss: {curr_loss:.6f} | Freq: {curr_freq:.1f}Hz)")
             loss_history.append(curr_loss)

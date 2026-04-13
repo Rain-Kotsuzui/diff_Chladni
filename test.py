@@ -16,7 +16,8 @@ def getDepth(N: int,L:float):
             y = (i*1.0 / N)
             # if(y<x*1.9 and y<(1-x)*1.9 and y>0.1):
             #     h_np[idx] = 0.001
-            if((x-0.5)**2+(y-0.5)**2 < 0.2**2):
+            # if((x-0.5)**2+(y-0.5)**2 > 0.2**2 and (x-0.5)**2+(y-0.5)**2 < 0.25**2):
+            if( x>0.7 and x<0.8):
                 h_np[idx] = 0.000
     return h_np
 
@@ -48,7 +49,7 @@ def main():
     fr_np = np.zeros(N * N, dtype=np.float32)
     
     # 第一个源：强度 1.0
-    idx1 = (N // 4) * N + (N // 2)
+    idx1 = (N // 2) * N + (N // 2)
     fr_np[idx1] = 1.0 
     
     # # 第二个源：强度 10.0

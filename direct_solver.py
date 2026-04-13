@@ -253,7 +253,7 @@ class DifferentiableDirectSolver:
             shape=(self.n, self.n)
         ).tocsr()
         diag = A_sparse.diagonal()
-        zero_diag_mask = np.abs(diag) < 1e-12
+        zero_diag_mask = np.abs(diag) < 0.1*1e-3
         if np.any(zero_diag_mask):
             patch = sp.diags(zero_diag_mask.astype(float), 0, shape=(self.n, self.n), format='csr')
             A_sparse = A_sparse + patch
