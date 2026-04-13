@@ -24,7 +24,7 @@ def compute_loss_and_adjoint_force(wr_np, wi_np, N, target_pattern):
     amp = torch.sqrt(wr**2 + wi**2 + 1e-12).reshape(1, 1, N, N)
     
     with torch.no_grad():
-        clip_max = torch.quantile(amp, 0.98)
+        clip_max = torch.max(amp)
         if clip_max < 1e-10: clip_max = 1e-10
     
     display = torch.exp(-(amp / (clip_max * 0.15 + 1e-12))**2)
@@ -165,6 +165,7 @@ def main(resume_step=None,num_sources=1):
     ax_loss.set_title("Training Loss History")
     ax_loss.set_xlabel("Step")
     ax_loss.set_ylabel("Loss")
+    ax_loss.set_yscale('log')
     ax_loss.grid(True, linestyle='--', alpha=0.6)
     ax_loss.legend()
     
@@ -253,7 +254,7 @@ def main(resume_step=None,num_sources=1):
             with torch.no_grad():
                 pos_tensor.clamp_(0.05, 0.95)
                 freq_tensor.clamp_(10.0, 20000.0)
-                h_tensor.clamp_(0.0001, 0.006)
+                h_tensor.clamp_(0.0001/2, 0.006)
                 h_np = h_tensor.cpu().numpy()
 
             print(f"Step {step:04d} | Loss: {curr_loss:.6f} | Freq: {curr_freq:.1f}Hz)")
@@ -276,7 +277,7 @@ def main(resume_step=None,num_sources=1):
 
             if step %1 ==0:
                 amp = np.abs(w_complex).reshape(N, N)
-                clip_max = np.percentile(amp, 98)
+                clip_max = np.max(amp)
                 display = np.exp(-(amp / (clip_max * 0.15 + 1e-15))**2)
                 
                 im1.set_data(display)
@@ -286,7 +287,7 @@ def main(resume_step=None,num_sources=1):
                 
                 h_2d = h_np.reshape(N, N)
                 h_mm = h_2d * 1000.0
-                masked_h_mm = np.ma.masked_where(h_mm < 0.1, h_mm)
+                masked_h_mm = np.ma.masked_where(h_mm < 0.0001*1000, h_mm)
                 im3.set_data(masked_h_mm)
                 # im3.set_data(h_np.reshape(N, N) * 1000.0)
 

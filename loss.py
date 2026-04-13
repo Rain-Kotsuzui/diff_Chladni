@@ -9,12 +9,12 @@ def ssim_loss(display_pattern, target_pattern):
 
 
 def physics_informed_loss(energy_field, target_pattern):
-    energy_on_lines = torch.sum(energy_field * target_pattern)
+    energy_on_target = torch.sum(energy_field * target_pattern)
     
-    total_energy = torch.sum(energy_field) + 1e-10
+    energy_off_target = torch.sum(energy_field * (1.0 - target_pattern))
     
-    loss = energy_on_lines / total_energy
-    
+    loss = energy_on_target / (energy_off_target + 1e-8)
+
     return loss
 
 import torch

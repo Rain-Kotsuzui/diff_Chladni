@@ -21,13 +21,21 @@ def assemble_stiffness_hessian_kernel(
     if i >= nx or j >= ny: return
 
     hi = h[idx]
+    base_ptr = idx * 100 
+
+    if hi < 0.0001:
+        coo_rows[base_ptr] = idx
+        coo_cols[base_ptr] = idx
+        coo_vals_r[base_ptr] = 1.0
+        coo_vals_i[base_ptr] = 0.0
+        return
+    
     D = (p.E * hi**3.0) / (12.0 * (1.0 - p.nu**2.0))
     dx2 = p.dx * p.dx
     dy2 = p.dy * p.dy
     dxdy = p.dx * p.dy
     area = p.dx * p.dy
     
-    base_ptr = idx * 100 
 
     # 质量
     # Π_mass = -0.5 * ω² * ρ * h * w² * area
@@ -52,6 +60,7 @@ def assemble_stiffness_hessian_kernel(
             cm = j + mj
             if rm < 0 or rm >= nx or cm < 0 or cm >= ny: continue
             idx_m = rm * ny + cm
+            if h[idx_m] < 0.0001: continue
 
             # 计算节点 m 对该点(i,j)处曲率的贡献系数
             # kxx = (w_i+1 - 2w_i + w_i-1) / dx²
@@ -83,6 +92,7 @@ def assemble_stiffness_hessian_kernel(
                     if rn < 0 or rn >= nx or cn < 0 or cn >= ny: continue
                     idx_n = rn * ny + cn
                     
+                    if h[idx_n] < 0.0001: continue
                     # 节点 n 对曲率的贡献
                     n_kxx = 0.0
                     if nj == 0:
@@ -110,7 +120,7 @@ def assemble_stiffness_hessian_kernel(
                         p.nu * (m_kxx * n_kyy + m_kyy * n_kxx) + 
                         2.0 * (1.0 - p.nu) * m_kxy * n_kxy
                     ) * area
-
+                    
                     if entry_offset < 100:
                         pos = base_ptr + entry_offset
                         coo_rows[pos] = idx_m
@@ -134,6 +144,10 @@ def compute_grad_h_kernel(
     if i >= nx or j >= ny: return
 
     hi = h[idx]
+    if hi < 0.0001:
+        grad_h[idx] = 0.0
+        return
+    
     # D = (E * h^3) / (12 * (1 - nu^2)) -> dD/dh = 3 * D / h
     dD_dh = (3.0 * p.E * hi**2.0) / (12.0 * (1.0 - p.nu**2.0))
     # dm/dh = rho * area
@@ -253,14 +267,18 @@ class DifferentiableDirectSolver:
             shape=(self.n, self.n)
         ).tocsr()
         diag = A_sparse.diagonal()
-        zero_diag_mask = np.abs(diag) < 0.1*1e-3
+        zero_diag_mask = np.abs(diag) < 0.0001
         if np.any(zero_diag_mask):
             patch = sp.diags(zero_diag_mask.astype(float), 0, shape=(self.n, self.n), format='csr')
             A_sparse = A_sparse + patch
 
         self.last_A = A_sparse 
-
+    
         f_complex = fr_wp.numpy() + 1j * fi_wp.numpy()
+        h_np = h_wp.numpy()
+
+        f_complex[h_np < 0.0001] = 0.0 
+
 
         if np.any(zero_diag_mask):
             f_complex[zero_diag_mask] = 0.0
