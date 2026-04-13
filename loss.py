@@ -9,13 +9,29 @@ def ssim_loss(display_pattern, target_pattern):
 
 
 def physics_informed_loss(energy_field, target_pattern):
-    energy_on_target = torch.sum(energy_field * target_pattern)
+    # max_energy = torch.max(energy_field)
+    # energy_field = energy_field / (max_energy + 1e-8)
+    # energy_on_target = torch.sum(energy_field * target_pattern)
     
-    energy_off_target = torch.sum(energy_field * (1.0 - target_pattern))
+    # energy_off_target = torch.sum(energy_field * (1.0 - target_pattern))
     
-    loss = energy_on_target / (energy_off_target + 1e-8)
-
+    # loss = energy_on_target / (energy_off_target + 1e-8)
+    
+    avg_energy = torch.mean(energy_field) + 1e-8
+    norm_energy = energy_field / avg_energy
+    
+    loss = torch.mean(norm_energy * target_pattern) - 0.5 * torch.mean(norm_energy * (1.0 - target_pattern))
     return loss
+
+def void_protection_loss(h_tensor, target_pattern, safe_h=0.001):
+     
+    h_2d = h_tensor.reshape(target_pattern.shape)
+    
+    eps = 1e-5
+    violation = 1.0 / (h_2d + eps) 
+    
+    penalty = violation * target_pattern
+    return torch.mean(penalty) * 0.001
 
 import torch
 import lpips

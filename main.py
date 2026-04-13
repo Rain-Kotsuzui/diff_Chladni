@@ -5,7 +5,7 @@ import cv2
 import torch
 from parameter import PlateParams
 from direct_solver import DifferentiableDirectSolver 
-from loss import ssim_loss, lpips_loss ,physics_informed_loss
+from loss import ssim_loss, lpips_loss ,physics_informed_loss,void_protection_loss
 import torch.optim as optim 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
@@ -14,7 +14,7 @@ import scipy.ndimage as ndimage
 
 wp.init()
 
-def compute_loss_and_adjoint_force(wr_np, wi_np, N, target_pattern):
+def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
  
     wr = torch.from_numpy(wr_np).cuda().float().requires_grad_(True)
     wi = torch.from_numpy(wi_np).cuda().float().requires_grad_(True)
@@ -36,7 +36,7 @@ def compute_loss_and_adjoint_force(wr_np, wi_np, N, target_pattern):
 
     l1 = ssim_loss(display, target.reshape(1, 1, N, N))
     l3 = lpips_loss(display, target.reshape(1, 1, N, N))
-    
+
     total_loss = l1 + 2.0*l3.mean()+l2*10.0
 
     if total_loss.dim() > 0:
@@ -84,34 +84,28 @@ def main(resume_step=None,num_sources=1):
     fi_wp = wp.zeros(N * N, dtype=float, device="cuda")
 
 
-    # init_positions = torch.rand((num_sources, 2), device="cuda").float() 
-    init_positions = torch.tensor([[0.5, 0.5]], device="cuda").float()
+    init_positions = torch.rand((num_sources, 2), device="cuda").float() 
+    # init_positions = torch.tensor([[0.5, 0.5]], device="cuda").float()
     
-    pos_tensor = init_positions.clone().detach().requires_grad_(False).float() 
+    pos_tensor = init_positions.clone().detach().requires_grad_(True).float() 
     
 
     target_freq = 1250.0 
     freq_tensor = torch.tensor([target_freq], device="cuda", requires_grad=True)
     
     optimizer = optim.Adam([
-        {'params': [h_tensor], 'lr': 0.001},
-        # {'params': pos_tensor, 'lr': 2e-2},  
+        {'params': [h_tensor], 'lr': 0.0001},
+        {'params': pos_tensor, 'lr': 2e-2},  
         {'params': freq_tensor, 'lr': 10.0}  
     ])
 
-    # idx_center = (N // 2) * N + (N // 2)
-
-    # fr_np[idx_center] = 1.0 
-    # fr_wp = wp.from_numpy(fr_np, device="cuda")
 
 
     image_path = "target_processed.jpg"
     target_raw = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     if target_raw is None: raise FileNotFoundError("Target image not found")
-    target_resized = cv2.resize(target_raw, (N, N)).astype(np.float32) / 255.0
-    
-    target_pattern = 1.0 - target_resized
-    # target_pattern = np.flipud(target_pattern)
+    target_resized  = cv2.resize(target_raw, (N, N)).astype(np.float32) / 255.0
+    target_pattern = 1.0 - target_resized[::-1, :]
 
     plt.ion() 
     fig, axes  = plt.subplots(2, 2, figsize=(8, 6), facecolor='black')
@@ -141,6 +135,7 @@ def main(resume_step=None,num_sources=1):
     for ax in [ax1, ax2, ax3,ax4]:
         ax.tick_params(colors='white')
         ax.set_facecolor('black')
+    ax1.set_facecolor('#00FF00')
     ax3.set_facecolor('#00FF00')
 
     ax1.set_title("Simulated Pattern", color='white', pad=10)
@@ -156,16 +151,20 @@ def main(resume_step=None,num_sources=1):
     loss_history_l1 = []
     loss_history_l2 = []
     loss_history_l3 = []
+    loss_history_l4 = []
     step_history = []
     fig_loss, ax_loss = plt.subplots(figsize=(10, 4), facecolor='#F0F0F0')
     line_loss, = ax_loss.plot([], [], 'r-', linewidth=2, label='Total Loss')
     line_loss_l1, = ax_loss.plot([], [], 'g-', linewidth=2, label='L1 Loss')
     line_loss_l2, = ax_loss.plot([], [], 'y-', linewidth=2, label='L2 Loss')
     line_loss_l3, = ax_loss.plot([], [], 'b-', linewidth=2, label='L3 Loss')
+    line_loss_l4, = ax_loss.plot([], [], 'm-', linewidth=2, label='Void Protection Loss')
+
     ax_loss.set_title("Training Loss History")
     ax_loss.set_xlabel("Step")
     ax_loss.set_ylabel("Loss")
     ax_loss.set_yscale('log')
+    ax_loss.set_ylim(1e-1, 1e2)
     ax_loss.grid(True, linestyle='--', alpha=0.6)
     ax_loss.legend()
     
@@ -191,6 +190,21 @@ def main(resume_step=None,num_sources=1):
                 print(f"Loaded pos: {loaded_pos}, freq: {loaded_freq}")
         else:
             print(f"Checkpoint directory {checkpoint_dir} not found. Starting from scratch.")
+    else:
+        random_noise = np.random.rand(N * N).astype(np.float32)
+    
+        noise_2d = random_noise.reshape(N, N)
+    
+        smoothed_noise = ndimage.gaussian_filter(noise_2d, sigma=2.0)
+    
+        smoothed_noise = (smoothed_noise - smoothed_noise.min()) / (smoothed_noise.max() - smoothed_noise.min())
+    
+        h_min, h_max = 0.001, 0.006
+        h_np = (smoothed_noise * (h_max - h_min) + h_min).flatten().astype(np.float32)
+
+        with torch.no_grad():
+            h_tensor.copy_(torch.from_numpy(h_np).cuda())
+
     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=100, factor=0.5)
     for step in range(100000):
         optimizer.zero_grad()
@@ -201,7 +215,6 @@ def main(resume_step=None,num_sources=1):
         force_tensor = generate_gaussian_force(N, pos_tensor)
         fr_np = force_tensor.detach().cpu().numpy()
         
-        # h_wp = wp.from_numpy(h_np, device="cuda")
         h_wp = wp.from_torch(h_tensor)
 
         fr_wp = wp.from_numpy(fr_np.astype(np.float32), device="cuda")
@@ -211,9 +224,12 @@ def main(resume_step=None,num_sources=1):
             wr_np, wi_np = w_complex.real, w_complex.imag
             
             curr_loss, g_wr, g_wi,l1,l2,l3 = compute_loss_and_adjoint_force(
-                wr_np, wi_np, N, target_pattern
+                h_tensor,wr_np, wi_np, N, target_pattern
             )
             
+            l4 = (1e10)*void_protection_loss(h_tensor,torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N))
+            l4.backward()
+
             grad_w_complex = g_wr + 1j * g_wi
 
 
@@ -224,7 +240,8 @@ def main(resume_step=None,num_sources=1):
 
             # h_tensor.grad = torch.from_numpy(grad_h).cuda().float()
             grad_h_norm = torch.norm(gh_smooth) + 1e-10
-            h_tensor.grad = (gh_smooth / grad_h_norm).flatten()
+            h_tensor.grad = (gh_smooth / grad_h_norm).flatten()+h_tensor.grad 
+            
 
             # 厚度 
             # grad_norm = np.max(np.abs(grad_h)) + 1e-10
@@ -240,8 +257,8 @@ def main(resume_step=None,num_sources=1):
 
 
             # 位置和频率
-            # grad_fr_tensor = torch.from_numpy(grad_fr_np).cuda().float()
-            # force_tensor.backward(grad_fr_tensor)
+            grad_fr_tensor = torch.from_numpy(grad_fr_np).cuda().float()
+            force_tensor.backward(grad_fr_tensor)
         
             # 频率梯度: dL/dfreq = dL/domega * (2*pi)
             freq_tensor.grad = torch.tensor([grad_omega * 2.0 * np.pi], device="cuda",dtype=torch.float32)
@@ -262,11 +279,13 @@ def main(resume_step=None,num_sources=1):
             loss_history_l1.append(l1)
             loss_history_l2.append(l2)
             loss_history_l3.append(l3)
+            loss_history_l4.append(l4.item())
             step_history.append(step)
             line_loss.set_data(step_history, loss_history)
             line_loss_l1.set_data(step_history, loss_history_l1)
             line_loss_l2.set_data(step_history, loss_history_l2)
             line_loss_l3.set_data(step_history, loss_history_l3)
+            line_loss_l4.set_data(step_history, loss_history_l4)
             
             ax_loss.relim()
             ax_loss.autoscale_view()
@@ -280,15 +299,15 @@ def main(resume_step=None,num_sources=1):
                 clip_max = np.max(amp)
                 display = np.exp(-(amp / (clip_max * 0.15 + 1e-15))**2)
                 
-                im1.set_data(display)
+
+                masked_h = np.ma.masked_where(h_np.reshape(N, N) < 0.0001, h_np.reshape(N, N))
+                masked_display = np.ma.masked_where(h_np.reshape(N, N) < 0.0001, display)
+
+                im1.set_data(masked_display)
                 im2.set_data(np.log10(amp + 1e-20))
                 im2.set_clim(np.min(np.log10(amp+1e-20)), np.max(np.log10(amp+1e-20)))
                 
-                
-                h_2d = h_np.reshape(N, N)
-                h_mm = h_2d * 1000.0
-                masked_h_mm = np.ma.masked_where(h_mm < 0.0001*1000, h_mm)
-                im3.set_data(masked_h_mm)
+                im3.set_data(masked_h*1000.0)
                 # im3.set_data(h_np.reshape(N, N) * 1000.0)
 
                 im4.set_data(fr_np.reshape(N, N))
