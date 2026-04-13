@@ -94,7 +94,7 @@ def main(resume_step=None,num_sources=1):
     freq_tensor = torch.tensor([target_freq], device="cuda", requires_grad=True)
     
     optimizer = optim.Adam([
-        {'params': [h_tensor], 'lr': 0.01},
+        {'params': [h_tensor], 'lr': 0.001},
         # {'params': pos_tensor, 'lr': 2e-2},  
         {'params': freq_tensor, 'lr': 10.0}  
     ])
@@ -253,7 +253,7 @@ def main(resume_step=None,num_sources=1):
             with torch.no_grad():
                 pos_tensor.clamp_(0.05, 0.95)
                 freq_tensor.clamp_(10.0, 20000.0)
-                h_tensor.clamp_(0.000, 0.006)
+                h_tensor.clamp_(0.0001, 0.006)
                 h_np = h_tensor.cpu().numpy()
 
             print(f"Step {step:04d} | Loss: {curr_loss:.6f} | Freq: {curr_freq:.1f}Hz)")
