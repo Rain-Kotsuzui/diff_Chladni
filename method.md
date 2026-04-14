@@ -1,5 +1,47 @@
 
 
+# 能量泛函求解
+
+## 1. 连续系统的稳态能量泛函
+对于频率为 $\omega$、激振力幅值为 $F(x,y)$ 的稳态振动，设其振幅场为 $W(x,y)$。系统的总能量泛函 $\Pi(W)$ 可表示为最大应变能 $U$、最大动能 $T$ 与外力虚功 $W_{ext}$ 之组合：
+
+$$\Pi(W) = U(W) - T(W) - W_{ext}(W)$$
+
+代入变厚度 $h(x,y)$ 和变刚度 $D(x,y)$ 参数，泛函的具体积分为：
+
+$$\begin{aligned} \Pi(W) =& \frac{1}{2} \iint_{\Omega} D(x,y) \left[ (\nabla^2 W)^2 - 2(1-\nu)\left( \frac{\partial^2 W}{\partial x^2}\frac{\partial^2 W}{\partial y^2} - \left(\frac{\partial^2 W}{\partial x \partial y}\right)^2 \right) \right] dxdy \\ &- \frac{1}{2} \omega^2 \iint_{\Omega} \rho h(x,y) W^2 dxdy - \iint_{\Omega} F(x,y) W dxdy \end{aligned}$$
+
+物理系统的真实振幅场，必然使得该能量泛函取极值或驻点，即一阶变分 $\delta \Pi = 0$。在此能量变分框架下，完全自由边界条件（法向弯矩和等效剪力为零）作为自然边界条件。
+
+## 2. 空间离散与二次型泛函
+对空间离散。利用基函数矩阵 $\mathbf{N}$ 将连续场 $W(x,y)$ 映射为有限维节点位移向量 $\mathbf{w}$：
+
+$$W(x,y) = \mathbf{N}(x,y) \mathbf{w}$$
+
+代入式 (2) 后，连续泛函 $\Pi(W)$ 退化为一个关于离散向量 $\mathbf{w}$ 的多维代数二次型函数：
+
+$$\Pi(\mathbf{w}) = \frac{1}{2} \mathbf{w}^T \mathbf{K} \mathbf{w} - \frac{1}{2} \omega^2 \mathbf{w}^T \mathbf{M} \mathbf{w} - \mathbf{w}^T \mathbf{f}$$
+
+其中，$\mathbf{K}$ 为总刚度矩阵，$\mathbf{M}$ 为总质量矩阵，$\mathbf{f}$ 为等效节点载荷向量。令动力刚度矩阵 $\mathbf{A} = \mathbf{K} - \omega^2 \mathbf{M}$，上式为：
+
+$$\Pi(\mathbf{w}) = \frac{1}{2} \mathbf{w}^T \mathbf{A} \mathbf{w} - \mathbf{w}^T \mathbf{f}$$
+
+## 3. 梯度寻优与 Hessian 矩阵求解
+从最优化的视角，求解振幅场 $\mathbf{w}$ 等价于寻找多元函数 $\Pi(\mathbf{w})$ 的驻点。
+令泛函对变量 $\mathbf{w}$ 的梯度为零：
+
+$$\nabla_{\mathbf{w}} \Pi(\mathbf{w}) = \mathbf{A} \mathbf{w} - \mathbf{f} = \mathbf{0}$$
+
+移项后即得到算法的最终求解方程：
+
+$$\mathbf{A} \mathbf{w} = \mathbf{f}$$
+
+进一步分析泛函的曲率张量，可得：
+
+$$\mathbf{H} = \nabla_{\mathbf{w}}^2 \Pi(\mathbf{w}) = \mathbf{A}$$
+
+线性方程组中的算子矩阵 $\mathbf{A}$，正是系统能量泛函的 Hessian 矩阵。本算法求解 $\mathbf{A}\mathbf{w}=\mathbf{f}$ 的过程，即是在能量流形上，沿梯度方向，得到驻点（鞍点）的过程。
+
 ## 伴随方法数学原理
 
 在逆向设计中，我们需要优化具有 $M$ 个参数的物理系统。
