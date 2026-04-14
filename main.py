@@ -31,20 +31,19 @@ def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
     
     energy_field = (wr**2 + wi**2).reshape(1, 1, N, N)
 
-    l2 = physics_informed_loss(energy_field, target)
+    l2 = physics_informed_loss(energy_field, target)*0.001
 
+    l1 = ssim_loss(display, target.reshape(1, 1, N, N))*100.0
+    l3 = lpips_loss(display, target.reshape(1, 1, N, N))*100.0
 
-    l1 = ssim_loss(display, target.reshape(1, 1, N, N))
-    l3 = lpips_loss(display, target.reshape(1, 1, N, N))
-
-    total_loss = l1 + 2.0*l3.mean()+l2*10.0
+    total_loss = l1+ l3.mean()+l2
 
     if total_loss.dim() > 0:
         total_loss = total_loss.mean()
 
     total_loss.backward()
     
-    return total_loss.item(), wr.grad.cpu().numpy(), wi.grad.cpu().numpy(), l1.item(),l2.item()*10.0, 2.0*l3.mean().item()
+    return total_loss.item(), wr.grad.cpu().numpy(), wi.grad.cpu().numpy(), l1.item(),l2.item(), l3.mean().item()
 
 def generate_gaussian_force(N, positions, sigma=0.02):
     x = torch.linspace(0, 1, N, device="cuda")
@@ -71,7 +70,7 @@ def main(resume_step=None,num_sources=1):
     p = PlateParams()
     p.E, p.nu, p.rho = 70.0e9, 0.33, 2700.0
     p.dx = p.dy = L / N
-    p.eta = 0.02
+    p.eta = 1e-4
 
     chladni_solver = DifferentiableDirectSolver(p, N, N)
 
@@ -94,8 +93,8 @@ def main(resume_step=None,num_sources=1):
     freq_tensor = torch.tensor([target_freq], device="cuda", requires_grad=True)
     
     optimizer = optim.Adam([
-        {'params': [h_tensor], 'lr': 0.0001},
-        {'params': pos_tensor, 'lr': 2e-2},  
+        {'params': [h_tensor], 'lr': 0.01},
+        {'params': pos_tensor, 'lr': 0.1},  
         {'params': freq_tensor, 'lr': 10.0}  
     ])
 
@@ -105,7 +104,7 @@ def main(resume_step=None,num_sources=1):
     target_raw = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     if target_raw is None: raise FileNotFoundError("Target image not found")
     target_resized  = cv2.resize(target_raw, (N, N)).astype(np.float32) / 255.0
-    target_pattern = 1.0 - target_resized[::-1, :]
+    target_pattern = 1.0 - target_resized[::-1, :] # 左右颠倒
 
     plt.ion() 
     fig, axes  = plt.subplots(2, 2, figsize=(8, 6), facecolor='black')
@@ -164,7 +163,7 @@ def main(resume_step=None,num_sources=1):
     ax_loss.set_xlabel("Step")
     ax_loss.set_ylabel("Loss")
     ax_loss.set_yscale('log')
-    ax_loss.set_ylim(1e-1, 1e2)
+    # ax_loss.set_ylim(1e-1, 1e2)
     ax_loss.grid(True, linestyle='--', alpha=0.6)
     ax_loss.legend()
     
@@ -198,8 +197,8 @@ def main(resume_step=None,num_sources=1):
         smoothed_noise = ndimage.gaussian_filter(noise_2d, sigma=2.0)
     
         smoothed_noise = (smoothed_noise - smoothed_noise.min()) / (smoothed_noise.max() - smoothed_noise.min())
-    
-        h_min, h_max = 0.001, 0.006
+        smoothed_noise = np.arctan((smoothed_noise - 0.5) * 60)*2 / 3.1415926 + 0.5
+        h_min, h_max = 0.0000, 0.006
         h_np = (smoothed_noise * (h_max - h_min) + h_min).flatten().astype(np.float32)
 
         with torch.no_grad():
@@ -227,8 +226,11 @@ def main(resume_step=None,num_sources=1):
                 h_tensor,wr_np, wi_np, N, target_pattern
             )
             
-            l4 = (1e10)*void_protection_loss(h_tensor,torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N))
+            l4 = (0)*void_protection_loss(h_tensor,torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N))
             l4.backward()
+            
+            grad_protect = h_tensor.grad.clone()
+
 
             grad_w_complex = g_wr + 1j * g_wi
 
@@ -236,11 +238,19 @@ def main(resume_step=None,num_sources=1):
             grad_h, grad_fr_np, grad_omega = chladni_solver.compute_adjoint_gradient(h_wp, w_complex, grad_w_complex)
             
             gh_torch = torch.from_numpy(grad_h).cuda().float().reshape(1, 1, N, N)
-            gh_smooth = torch.nn.functional.avg_pool2d(gh_torch, kernel_size=3, stride=1, padding=1)
 
-            # h_tensor.grad = torch.from_numpy(grad_h).cuda().float()
-            grad_h_norm = torch.norm(gh_smooth) + 1e-10
-            h_tensor.grad = (gh_smooth / grad_h_norm).flatten()+h_tensor.grad 
+            
+            target_mask = torch.from_numpy(target_pattern).cuda().float().reshape(N, N)
+            
+            active_protection_mask = (target_mask < 0.5) & (gh_torch > 0)
+            gh_torch[active_protection_mask] = 0.0
+
+
+            gh_smooth = torch.nn.functional.avg_pool2d(gh_torch, kernel_size=3, stride=1, padding=1)
+            gh_phys_final = gh_smooth / (torch.norm(gh_smooth) + 1e-10)
+
+            
+            h_tensor.grad =gh_phys_final.flatten()+grad_protect
             
 
             # 厚度 
@@ -341,4 +351,4 @@ def main(resume_step=None,num_sources=1):
     plt.show()
 
 if __name__ == "__main__":
-    main(None,1)
+    main(None,2)

@@ -16,7 +16,7 @@ def physics_informed_loss(energy_field, target_pattern):
     # energy_off_target = torch.sum(energy_field * (1.0 - target_pattern))
     
     # loss = energy_on_target / (energy_off_target + 1e-8)
-    
+
     avg_energy = torch.mean(energy_field) + 1e-8
     norm_energy = energy_field / avg_energy
     
@@ -30,8 +30,10 @@ def void_protection_loss(h_tensor, target_pattern, safe_h=0.001):
     eps = 1e-5
     violation = 1.0 / (h_2d + eps) 
     
-    penalty = violation * target_pattern
-    return torch.mean(penalty) * 0.001
+    mask = (target_pattern < 0.5).int()
+    
+    penalty = (violation * target_pattern)*mask
+    return torch.mean(penalty)
 
 import torch
 import lpips
