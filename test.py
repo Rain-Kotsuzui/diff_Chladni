@@ -2,7 +2,7 @@ import warp as wp
 import numpy as np
 import matplotlib.pyplot as plt
 from parameter import PlateParams
-from direct_solver import DirectSolver
+from direct_solver import DifferentiableDirectSolver
 
 wp.init()
 
@@ -33,7 +33,7 @@ def main():
     p.dy = L / N     
     p.eta = 1e-4    # 阻尼
 
-    chladni_solver = DirectSolver(p, N, N)
+    chladni_solver = DifferentiableDirectSolver(p, N, N)
 
     start_f = 500.0   
     end_f = 2000.0
@@ -79,6 +79,9 @@ def main():
     im1 = ax1.imshow(dummy_data, cmap='magma', origin='lower', extent=[0, L*100, 0, L*100], vmin=0, vmax=1)
     im2 = ax2.imshow(dummy_data, cmap='viridis', origin='lower', extent=[0, L*100, 0, L*100])
     
+    x_coords = np.linspace(0, L*100, N)
+    y_coords = np.linspace(0, L*100, N)
+    X_grid, Y_grid = np.meshgrid(x_coords, y_coords, indexing='ij')
     
     im3 = ax3.imshow(h_np, cmap='plasma', origin='lower', extent=[0, L*100, 0, L*100])
     ax3.set_title("Plate Thickness (mm)", color='white')
@@ -99,16 +102,17 @@ def main():
         ax.set_facecolor('black')
 
     ax1.set_title("Chladni Pattern (Nodes)", color='white')
-    ax2.set_title("Log10 Amplitude", color='white')
+    ax2.set_title("energy field", color='white')
 
 
     
     for f in freqs:
         p.omega = 2.0 * np.pi * f
         try:
-            wr, wi = chladni_solver.solve(h_wp, fr, fi)
-            
-            amp = np.sqrt(wr.numpy()**2 + wi.numpy()**2).reshape((N, N))
+            w_complex = chladni_solver.solve(h_wp, fr, fi)
+            wr, wi = w_complex.real, w_complex.imag
+
+            amp = np.sqrt(wr**2 + wi**2).reshape((N, N))
             
             clip_max = np.percentile(amp, 98)
             if clip_max < 1e-20: clip_max = 1e-20
@@ -117,9 +121,19 @@ def main():
             
             im1.set_data(display_pattern)
             
-            log_amp = np.log10(amp + 1e-20)
-            im2.set_data(log_amp)
-            im2.set_clim(vmin=np.min(log_amp), vmax=np.max(log_amp))
+            
+            energy_field = (wr**2.0 + wi**2.0).reshape( N, N)
+            im2.set_data(energy_field.reshape(N, N))
+            for c in ax2.collections:
+                    c.remove()
+            
+            non_zero_energy = energy_field[energy_field > 1e-18]
+            if non_zero_energy.size > 0:
+                threshold = np.percentile(non_zero_energy, 5)
+                ax2.contour(X_grid, Y_grid, energy_field, levels=[threshold], colors='white', linewidths=1.5)
+            im2.set_clim(np.min(energy_field), np.max(energy_field))
+                
+
             
             ax1.set_title(f"Frequency: {f:.1f} Hz", color='white', fontsize=16)
             

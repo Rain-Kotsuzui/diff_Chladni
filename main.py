@@ -5,7 +5,7 @@ import cv2
 import torch
 from parameter import PlateParams
 from direct_solver import DifferentiableDirectSolver 
-from loss import ssim_loss, lpips_loss ,physics_informed_loss,void_protection_loss
+from loss import ssim_loss, lpips_loss ,physics_informed_loss,void_protection_loss,quantile_physics_loss
 import torch.optim as optim 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
@@ -31,10 +31,12 @@ def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
     
     energy_field = (wr**2 + wi**2).reshape(1, 1, N, N)
 
-    l2 = physics_informed_loss(energy_field, target)*0.001
+    l2 = physics_informed_loss(energy_field, target)*0.0
 
-    l1 = ssim_loss(display, target.reshape(1, 1, N, N))*100.0
-    l3 = lpips_loss(display, target.reshape(1, 1, N, N))*100.0
+    l1 = ssim_loss(display, target.reshape(1, 1, N, N))*10.0
+    # l3 = lpips_loss(display, target.reshape(1, 1, N, N))*10.0
+    l3 = quantile_physics_loss(energy_field, target.reshape(1, 1, N, N), q=0.10)*1.0
+    l3 = torch.clamp(l3, 0.0, 50.0)
 
     total_loss = l1+ l3.mean()+l2
 
@@ -56,7 +58,7 @@ def generate_gaussian_force(N, positions, sigma=0.02):
     # force = torch.exp(-dist_sq / (2 * sigma**2))
     for i in range(positions.shape[0]):
         dist_sq = (X - positions[i, 0])**2 + (Y - positions[i, 1])**2
-        force = torch.exp(-dist_sq / (2 * sigma**2))
+        force = torch.exp(-dist_sq / (2 * sigma**2))*10.0
         total_force += force.flatten()
     return total_force
 
@@ -70,7 +72,7 @@ def main(resume_step=None,num_sources=1):
     p = PlateParams()
     p.E, p.nu, p.rho = 70.0e9, 0.33, 2700.0
     p.dx = p.dy = L / N
-    p.eta = 1e-4
+    p.eta = 1e-6
 
     chladni_solver = DifferentiableDirectSolver(p, N, N)
 
@@ -93,9 +95,9 @@ def main(resume_step=None,num_sources=1):
     freq_tensor = torch.tensor([target_freq], device="cuda", requires_grad=True)
     
     optimizer = optim.Adam([
-        {'params': [h_tensor], 'lr': 0.01},
-        {'params': pos_tensor, 'lr': 0.1},  
-        {'params': freq_tensor, 'lr': 10.0}  
+        {'params': [h_tensor], 'lr': 0.1},
+        {'params': pos_tensor, 'lr': 0.05},  
+        {'params': freq_tensor, 'lr': 100.0}  
     ])
 
 
@@ -112,8 +114,11 @@ def main(resume_step=None,num_sources=1):
     ax1, ax2, ax3, ax4 = axes.flatten()
     im1 = ax1.imshow(np.zeros((N, N)), cmap='magma', origin='lower', extent=[0, L*100, 0, L*100], vmin=0, vmax=1)
     im2 = ax2.imshow(np.zeros((N, N)), cmap='viridis', origin='lower', extent=[0, L*100, 0, L*100])
-    im3 = ax3.imshow(h_np.reshape(N, N)*1000, cmap='plasma', origin='lower', extent=[0, L*100, 0, L*100],vmin=0.0, vmax=6.0)
+    im3 = ax3.imshow(h_np.reshape(N, N)*1000, cmap='plasma', origin='lower', extent=[0, L*100, 0, L*100],vmin=0.0, vmax=10.0)
     
+    x_coords = np.linspace(0, L*100, N)
+    y_coords = np.linspace(0, L*100, N)
+    X_grid, Y_grid = np.meshgrid(x_coords, y_coords)
 
     im4 = ax4.imshow(np.zeros((N, N)), cmap='inferno', origin='lower', 
                      extent=[0, L*100, 0, L*100], vmin=0, vmax=1.1)
@@ -127,7 +132,7 @@ def main(resume_step=None,num_sources=1):
         return cax
     
     add_aligned_colorbar(im1, ax1, label='Normalized Amp')
-    add_aligned_colorbar(im2, ax2, label='Log Amp')
+    add_aligned_colorbar(im2, ax2, label='Amp')
     add_aligned_colorbar(im3, ax3, label='Thickness (mm)')
     add_aligned_colorbar(im4, ax4, label='Force Amp')
 
@@ -194,11 +199,11 @@ def main(resume_step=None,num_sources=1):
     
         noise_2d = random_noise.reshape(N, N)
     
-        smoothed_noise = ndimage.gaussian_filter(noise_2d, sigma=2.0)
+        smoothed_noise = ndimage.gaussian_filter(noise_2d, sigma=1.0)
     
         smoothed_noise = (smoothed_noise - smoothed_noise.min()) / (smoothed_noise.max() - smoothed_noise.min())
         smoothed_noise = np.arctan((smoothed_noise - 0.5) * 60)*2 / 3.1415926 + 0.5
-        h_min, h_max = 0.0000, 0.006
+        h_min, h_max = 0.0000, 0.01
         h_np = (smoothed_noise * (h_max - h_min) + h_min).flatten().astype(np.float32)
 
         with torch.no_grad():
@@ -226,7 +231,7 @@ def main(resume_step=None,num_sources=1):
                 h_tensor,wr_np, wi_np, N, target_pattern
             )
             
-            l4 = (0)*void_protection_loss(h_tensor,torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N))
+            l4 = (1e-2)*void_protection_loss(h_tensor,torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N))
             l4.backward()
             
             grad_protect = h_tensor.grad.clone()
@@ -247,7 +252,8 @@ def main(resume_step=None,num_sources=1):
 
 
             gh_smooth = torch.nn.functional.avg_pool2d(gh_torch, kernel_size=3, stride=1, padding=1)
-            gh_phys_final = gh_smooth / (torch.norm(gh_smooth) + 1e-10)
+            # gh_phys_final = gh_smooth / (torch.norm(gh_smooth) + 1e-10)
+            gh_phys_final = gh_smooth
 
             
             h_tensor.grad =gh_phys_final.flatten()+grad_protect
@@ -281,7 +287,7 @@ def main(resume_step=None,num_sources=1):
             with torch.no_grad():
                 pos_tensor.clamp_(0.05, 0.95)
                 freq_tensor.clamp_(10.0, 20000.0)
-                h_tensor.clamp_(0.0001/2, 0.006)
+                h_tensor.clamp_(0.0001/2, 0.01)
                 h_np = h_tensor.cpu().numpy()
 
             print(f"Step {step:04d} | Loss: {curr_loss:.6f} | Freq: {curr_freq:.1f}Hz)")
@@ -309,14 +315,28 @@ def main(resume_step=None,num_sources=1):
                 clip_max = np.max(amp)
                 display = np.exp(-(amp / (clip_max * 0.15 + 1e-15))**2)
                 
+                max = np.max(display)
+                display = display / max
 
                 masked_h = np.ma.masked_where(h_np.reshape(N, N) < 0.0001, h_np.reshape(N, N))
                 masked_display = np.ma.masked_where(h_np.reshape(N, N) < 0.0001, display)
 
                 im1.set_data(masked_display)
-                im2.set_data(np.log10(amp + 1e-20))
-                im2.set_clim(np.min(np.log10(amp+1e-20)), np.max(np.log10(amp+1e-20)))
                 
+                energy_field = (wr_np**2 + wi_np**2).reshape( N, N)
+                im2.set_data((np.log10(amp+1e-12)).reshape(N, N))
+                for c in ax2.collections:
+                    c.remove()
+                
+                non_zero_energy = energy_field[energy_field > 1e-18]
+                if non_zero_energy.size > 0:
+                    threshold = np.percentile(non_zero_energy, 10)
+                    ax2.contour(X_grid, Y_grid, energy_field, levels=[threshold], colors='white', linewidths=1.5)
+
+                im2.set_clim(np.min(np.log10(amp+1e-12)), np.max(np.log10(amp+1e-12)))
+                
+
+
                 im3.set_data(masked_h*1000.0)
                 # im3.set_data(h_np.reshape(N, N) * 1000.0)
 
@@ -351,4 +371,4 @@ def main(resume_step=None,num_sources=1):
     plt.show()
 
 if __name__ == "__main__":
-    main(None,2)
+    main(None,4)
