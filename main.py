@@ -9,10 +9,14 @@ from loss import ssim_loss, lpips_loss ,physics_informed_loss,void_protection_lo
 import torch.optim as optim 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
-
+import torch.nn.functional as F
 import scipy.ndimage as ndimage
 
 wp.init()
+
+MIN_H = 0.0001
+MAX_H= 0.01
+max_steps = 100000
 
 def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
  
@@ -21,21 +25,28 @@ def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
     
     target = torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N)
 
-    amp = torch.sqrt(wr**2 + wi**2 + 1e-12).reshape(1, 1, N, N)
+    amp = torch.sqrt(wr**2 + wi**2+1e-12).reshape(1, 1, N, N)
+    h_2d = h_tensor.reshape(1, 1, N, N)
+
     
+    material_mask = torch.sigmoid((h_2d - MIN_H) * 1e10)
+    penalty_value = 100000.0 
+    effective_amp =( amp * material_mask + penalty_value * (1.0 - material_mask))
+
+    # effective_amp = amp
+
     with torch.no_grad():
         clip_max = torch.max(amp)
         if clip_max < 1e-10: clip_max = 1e-10
     
-    display = torch.exp(-(amp / (clip_max * 0.15 + 1e-12))**2)
+    display = torch.exp(-(effective_amp / (clip_max * 0.15 + 1e-12))**2)
     
-    energy_field = (wr**2 + wi**2).reshape(1, 1, N, N)
 
-    l2 = physics_informed_loss(energy_field, target)*0.0
+    l2 = physics_informed_loss(effective_amp, target)*5.0
 
     l1 = ssim_loss(display, target.reshape(1, 1, N, N))*10.0
     # l3 = lpips_loss(display, target.reshape(1, 1, N, N))*10.0
-    l3 = quantile_physics_loss(energy_field, target.reshape(1, 1, N, N), q=0.10)*1.0
+    l3 = quantile_physics_loss(effective_amp, target.reshape(1, 1, N, N), q=0.10)*1.0
     l3 = torch.clamp(l3, 0.0, 50.0)
 
     total_loss = l1+ l3.mean()+l2
@@ -43,8 +54,8 @@ def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
     if total_loss.dim() > 0:
         total_loss = total_loss.mean()
 
-    total_loss.backward()
-    
+    # total_loss.backward()
+    total_loss.backward(retain_graph=True)
     return total_loss.item(), wr.grad.cpu().numpy(), wi.grad.cpu().numpy(), l1.item(),l2.item(), l3.mean().item()
 
 def generate_gaussian_force(N, positions, sigma=0.02):
@@ -61,6 +72,22 @@ def generate_gaussian_force(N, positions, sigma=0.02):
         force = torch.exp(-dist_sq / (2 * sigma**2))*10.0
         total_force += force.flatten()
     return total_force
+
+
+def apply_diffusion(rho, sigma):
+    s = float(sigma)
+    if s <= 0.1: return rho
+    
+    k_size = int(4 * sigma + 1)
+    if k_size % 2 == 0: k_size += 1
+    
+    x = torch.arange(k_size).float() - k_size // 2
+    gauss = torch.exp(-x**2 / (2 * sigma**2))
+    gauss = gauss / gauss.sum()
+    kernel = gauss.view(1, 1, -1, 1) * gauss.view(1, 1, 1, -1)
+    kernel = kernel.to(rho.device)
+    
+    return F.conv2d(rho, kernel, padding=k_size // 2)
 
 def main(resume_step=None,num_sources=1):
     output_dir = f"./train_results/sources_{num_sources}"
@@ -94,12 +121,6 @@ def main(resume_step=None,num_sources=1):
     target_freq = 1250.0 
     freq_tensor = torch.tensor([target_freq], device="cuda", requires_grad=True)
     
-    optimizer = optim.Adam([
-        {'params': [h_tensor], 'lr': 0.1},
-        {'params': pos_tensor, 'lr': 0.05},  
-        {'params': freq_tensor, 'lr': 100.0}  
-    ])
-
 
 
     image_path = "target_processed.jpg"
@@ -168,50 +189,75 @@ def main(resume_step=None,num_sources=1):
     ax_loss.set_xlabel("Step")
     ax_loss.set_ylabel("Loss")
     ax_loss.set_yscale('log')
-    # ax_loss.set_ylim(1e-1, 1e2)
+    ax_loss.set_ylim(1e-1, 1e3)
     ax_loss.grid(True, linestyle='--', alpha=0.6)
     ax_loss.legend()
     
-    if resume_step is not None:
-        checkpoint_dir = os.path.join(output_dir, f"{resume_step}")
-        if os.path.exists(checkpoint_dir):
-            print(f"Resuming training from step {resume_step}...")
-            h_path = os.path.join(checkpoint_dir, "h.npy")
-            if os.path.exists(h_path):
-                h_np = np.load(h_path).flatten().astype(np.float32)
-                with torch.no_grad():
-                    h_tensor.copy_(torch.from_numpy(h_np).cuda())
-                print(f"Loaded h from {h_path}")
+    # if resume_step is not None:
+    #     checkpoint_dir = os.path.join(output_dir, f"{resume_step}")
+    #     if os.path.exists(checkpoint_dir):
+    #         print(f"Resuming training from step {resume_step}...")
+    #         h_path = os.path.join(checkpoint_dir, "h.npy")
+    #         if os.path.exists(h_path):
+    #             h_np = np.load(h_path).flatten().astype(np.float32)
+    #             with torch.no_grad():
+    #                 h_tensor.copy_(torch.from_numpy(h_np).cuda())
+    #             print(f"Loaded h from {h_path}")
             
-            force_path = os.path.join(checkpoint_dir, "force.npz")
-            if os.path.exists(force_path):
-                data = np.load(force_path)
-                loaded_pos = data['pos']
-                loaded_freq = data['freq']
-                with torch.no_grad():
-                    pos_tensor.copy_(torch.tensor(loaded_pos, device="cuda"))
-                    freq_tensor.copy_(torch.tensor(loaded_freq, device="cuda"))
-                print(f"Loaded pos: {loaded_pos}, freq: {loaded_freq}")
-        else:
-            print(f"Checkpoint directory {checkpoint_dir} not found. Starting from scratch.")
-    else:
-        random_noise = np.random.rand(N * N).astype(np.float32)
+    #         force_path = os.path.join(checkpoint_dir, "force.npz")
+    #         if os.path.exists(force_path):
+    #             data = np.load(force_path)
+    #             loaded_pos = data['pos']
+    #             loaded_freq = data['freq']
+    #             with torch.no_grad():
+    #                 pos_tensor.copy_(torch.tensor(loaded_pos, device="cuda"))
+    #                 freq_tensor.copy_(torch.tensor(loaded_freq, device="cuda"))
+    #             print(f"Loaded pos: {loaded_pos}, freq: {loaded_freq}")
+    #     else:
+    #         print(f"Checkpoint directory {checkpoint_dir} not found. Starting from scratch.")
+    # else:
+    #     random_noise = np.random.rand(N * N).astype(np.float32)
     
-        noise_2d = random_noise.reshape(N, N)
+    #     noise_2d = random_noise.reshape(N, N)
     
-        smoothed_noise = ndimage.gaussian_filter(noise_2d, sigma=1.0)
+    #     smoothed_noise = ndimage.gaussian_filter(noise_2d, sigma=1.0)
     
-        smoothed_noise = (smoothed_noise - smoothed_noise.min()) / (smoothed_noise.max() - smoothed_noise.min())
-        smoothed_noise = np.arctan((smoothed_noise - 0.5) * 60)*2 / 3.1415926 + 0.5
-        h_min, h_max = 0.0000, 0.01
-        h_np = (smoothed_noise * (h_max - h_min) + h_min).flatten().astype(np.float32)
+    #     smoothed_noise = (smoothed_noise - smoothed_noise.min()) / (smoothed_noise.max() - smoothed_noise.min())
+    #     smoothed_noise = np.arctan((smoothed_noise - 0.5) * 60)*2 / 3.1415926 + 0.5
+       
+    #     h_np = (smoothed_noise * (MAX_H - MIN_H) + MIN_H).flatten().astype(np.float32)
 
-        with torch.no_grad():
-            h_tensor.copy_(torch.from_numpy(h_np).cuda())
+    #     with torch.no_grad():
+    #         h_tensor.copy_(torch.from_numpy(h_np).cuda())
+    
+    rho_tensor = torch.full((1, 1, N, N), 0.5, device="cuda", requires_grad=True) 
+    random_noise = np.random.rand(N * N).astype(np.float32)
+    
+    noise_2d = random_noise.reshape(N, N)
+    
+    smoothed_noise = ndimage.gaussian_filter(noise_2d, sigma=1.0)
+    
+    smoothed_noise = (smoothed_noise - smoothed_noise.min()) / (smoothed_noise.max() - smoothed_noise.min())
+    rho_np = np.arctan((smoothed_noise - 0.5) * 60)*2 / 3.1415926 + 0.5
+
+    with torch.no_grad():
+        rho_tensor.copy_(torch.from_numpy(rho_np.flatten()).cuda().view(1, 1, N, N))
+    def get_physical_h(rho):
+        return rho * (MAX_H - MIN_H/2) + MIN_H/2
+    # h_np = (smoothed_noise * (MAX_H - MIN_H) + MIN_H).flatten().astype(np.float32)
+
+
+    optimizer = optim.Adam([
+        {'params': [rho_tensor], 'lr': 1},
+        {'params': pos_tensor, 'lr': 0.05},  
+        {'params': freq_tensor, 'lr': 100.0}  
+    ])
 
     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=100, factor=0.5)
-    for step in range(100000):
+    for step in range(int(max_steps)):
         optimizer.zero_grad()
+        
+        current_sigma = max(0.1, 2.0 * (1 - step / 5000))
 
         curr_freq = freq_tensor.item()
         p.omega = 2.0 * np.pi * curr_freq
@@ -219,8 +265,11 @@ def main(resume_step=None,num_sources=1):
         force_tensor = generate_gaussian_force(N, pos_tensor)
         fr_np = force_tensor.detach().cpu().numpy()
         
-        h_wp = wp.from_torch(h_tensor)
-
+        # h_wp = wp.from_torch(h_tensor)
+        h_diffused = apply_diffusion(rho_tensor, current_sigma)
+        h_phys = get_physical_h(h_diffused)
+        
+        h_wp = wp.from_torch(h_phys.flatten())
         fr_wp = wp.from_numpy(fr_np.astype(np.float32), device="cuda")
         
         try:
@@ -228,35 +277,29 @@ def main(resume_step=None,num_sources=1):
             wr_np, wi_np = w_complex.real, w_complex.imag
             
             curr_loss, g_wr, g_wi,l1,l2,l3 = compute_loss_and_adjoint_force(
-                h_tensor,wr_np, wi_np, N, target_pattern
+                h_phys,wr_np, wi_np, N, target_pattern
             )
             
-            l4 = (1e-2)*void_protection_loss(h_tensor,torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N))
-            l4.backward()
+            l4 = (1.0)*void_protection_loss(h_phys,torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N))
+            # l4.backward()
+            (curr_loss + l4).backward(retain_graph=True)
+
             
-            grad_protect = h_tensor.grad.clone()
+            # grad_protect = rho_tensor.grad.clone()
 
 
             grad_w_complex = g_wr + 1j * g_wi
 
-
             grad_h, grad_fr_np, grad_omega = chladni_solver.compute_adjoint_gradient(h_wp, w_complex, grad_w_complex)
-            
             gh_torch = torch.from_numpy(grad_h).cuda().float().reshape(1, 1, N, N)
-
-            
             target_mask = torch.from_numpy(target_pattern).cuda().float().reshape(N, N)
-            
             active_protection_mask = (target_mask < 0.5) & (gh_torch > 0)
             gh_torch[active_protection_mask] = 0.0
-
-
             gh_smooth = torch.nn.functional.avg_pool2d(gh_torch, kernel_size=3, stride=1, padding=1)
-            # gh_phys_final = gh_smooth / (torch.norm(gh_smooth) + 1e-10)
-            gh_phys_final = gh_smooth
+            gh_phys_final = gh_smooth / (torch.norm(gh_smooth) + 1e-10)
 
-            
-            h_tensor.grad =gh_phys_final.flatten()+grad_protect
+            # h_phys.grad =gh_phys_final.flatten()+grad_protect
+            h_phys.backward(gradient=gh_phys_final)
             
 
             # 厚度 
@@ -287,8 +330,12 @@ def main(resume_step=None,num_sources=1):
             with torch.no_grad():
                 pos_tensor.clamp_(0.05, 0.95)
                 freq_tensor.clamp_(10.0, 20000.0)
-                h_tensor.clamp_(0.0001/2, 0.01)
-                h_np = h_tensor.cpu().numpy()
+                noise_std = 10.0 * (1 - step / 5000)
+                noise = torch.randn_like(rho_tensor) * noise_std
+                rho_tensor.add_(noise)
+                rho_tensor.clamp_(0, 1)
+                # h_tensor.clamp_(MIN_H/2, MAX_H)
+                # h_np = h_tensor.cpu().numpy()
 
             print(f"Step {step:04d} | Loss: {curr_loss:.6f} | Freq: {curr_freq:.1f}Hz)")
             loss_history.append(curr_loss)
@@ -311,23 +358,32 @@ def main(resume_step=None,num_sources=1):
 
 
             if step %1 ==0:
+                h_phys_np = h_phys.detach().cpu().numpy().reshape(N, N)
                 amp = np.abs(w_complex).reshape(N, N)
                 clip_max = np.max(amp)
                 display = np.exp(-(amp / (clip_max * 0.15 + 1e-15))**2)
                 
-                max = np.max(display)
-                display = display / max
+                norm = np.max(display)
+                display = display / norm
 
-                masked_h = np.ma.masked_where(h_np.reshape(N, N) < 0.0001, h_np.reshape(N, N))
-                masked_display = np.ma.masked_where(h_np.reshape(N, N) < 0.0001, display)
+                masked_h = np.ma.masked_where(h_phys_np.reshape(N, N) < MIN_H, h_phys_np.reshape(N, N))
+                masked_display = np.ma.masked_where(h_phys_np.reshape(N, N) < MIN_H, display)
+
+
 
                 im1.set_data(masked_display)
                 
-                energy_field = (wr_np**2 + wi_np**2).reshape( N, N)
-                im2.set_data((np.log10(amp+1e-12)).reshape(N, N))
+                
+                material_mask = 1 / (1 + np.exp(-((h_phys_np.reshape(N, N) - MIN_H) * 1e10)))
+                penalty_value = 100000.0 
+                effective_amp =( amp * material_mask + penalty_value * (1.0 - material_mask))
+
+                im2.set_data(np.log10((effective_amp+1e-12)).reshape(N, N))
+
                 for c in ax2.collections:
                     c.remove()
                 
+                energy_field = (wr_np**2 + wi_np**2).reshape( N, N)
                 non_zero_energy = energy_field[energy_field > 1e-18]
                 if non_zero_energy.size > 0:
                     threshold = np.percentile(non_zero_energy, 10)
@@ -338,7 +394,6 @@ def main(resume_step=None,num_sources=1):
 
 
                 im3.set_data(masked_h*1000.0)
-                # im3.set_data(h_np.reshape(N, N) * 1000.0)
 
                 im4.set_data(fr_np.reshape(N, N))
 
@@ -351,7 +406,7 @@ def main(resume_step=None,num_sources=1):
                     os.makedirs(step_dir, exist_ok=True)
             
 
-                    h_to_save = (h_np.reshape(N, N)).astype(np.float32)
+                    h_to_save = h_phys.detach().cpu().numpy().astype(np.float32)
                     np.save(os.path.join(step_dir, f"h.npy"), h_to_save)
 
                     np.savez(

@@ -16,9 +16,9 @@ def getDepth(N: int,L:float):
             y = (i*1.0 / N)
             # if(y<x*1.9 and y<(1-x)*1.9 and y>0.1):
             #     h_np[idx] = 0.001
-            if( (x-0.2)**2+(y-0.5)**2 < 0.11**2 or (x-0.8)**2+(y-0.5)**2 < 0.11**2 or (x-0.5)**2+(y-0.2)**2 < 0.11**2 or (x-0.5)**2+(y-0.8)**2 < 0.11**2):
+            # if( (x-0.2)**2+(y-0.5)**2 < 0.11**2 or (x-0.8)**2+(y-0.5)**2 < 0.11**2 or (x-0.5)**2+(y-0.2)**2 < 0.11**2 or (x-0.5)**2+(y-0.8)**2 < 0.11**2):
             # if( x>0.7 and x<0.8):
-                 h_np[idx] = 0.000
+                #  h_np[idx] = 0.000
     return h_np
 
 def main():
@@ -118,7 +118,8 @@ def main():
             if clip_max < 1e-20: clip_max = 1e-20
             
             display_pattern = np.exp(-(amp / (clip_max * 0.15))**2)
-            
+            plt.imsave('pattern.png', display_pattern, cmap='viridis')
+
             im1.set_data(display_pattern)
             
             

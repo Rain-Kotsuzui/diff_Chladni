@@ -1,0 +1,910 @@
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.1.18)  15 APR 2026 18:44
+entering extended mode
+ restricted \write18 enabled.
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
+**d:/LIFE/diff_Chladni/article/t.tex
+(d:/LIFE/diff_Chladni/article/t.tex
+LaTeX2e <2023-11-01> patch level 1
+L3 programming layer <2024-02-20>
+(c:/texlive/2024/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2023/05/17 v1.4n Standard LaTeX document class
+(c:/texlive/2024/texmf-dist/tex/latex/base/size11.clo
+File: size11.clo 2023/05/17 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count184
+\c@section=\count185
+\c@subsection=\count186
+\c@subsubsection=\count187
+\c@paragraph=\count188
+\c@subparagraph=\count189
+\c@figure=\count190
+\c@table=\count191
+\abovecaptionskip=\skip48
+\belowcaptionskip=\skip49
+\bibindent=\dimen140
+) (c:/texlive/2024/texmf-dist/tex/latex/base/inputenc.sty
+Package: inputenc 2021/02/14 v1.3d Input encoding file
+\inpenc@prehook=\toks17
+\inpenc@posthook=\toks18
+
+
+Package inputenc Warning: inputenc package ignored with utf8 based engines.
+
+) (c:/texlive/2024/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2021/04/29 v2.0v Standard LaTeX package
+LaTeX Font Info:    Trying to load font information for T1+lmr on input line 112.
+ (c:/texlive/2024/texmf-dist/tex/latex/lm/t1lmr.fd
+File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)) (c:/texlive/2024/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2023/05/13 v2.17o AMS math features
+\@mathmargin=\skip50
+
+For additional information on amsmath, use the `?' option.
+(c:/texlive/2024/texmf-dist/tex/latex/amsmath/amstext.sty
+Package: amstext 2021/08/26 v2.01 AMS text
+ (c:/texlive/2024/texmf-dist/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks19
+\ex@=\dimen141
+)) (c:/texlive/2024/texmf-dist/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen142
+) (c:/texlive/2024/texmf-dist/tex/latex/amsmath/amsopn.sty
+Package: amsopn 2022/04/08 v2.04 operator names
+)
+\inf@bad=\count192
+LaTeX Info: Redefining \frac on input line 234.
+\uproot@=\count193
+\leftroot@=\count194
+LaTeX Info: Redefining \overline on input line 399.
+LaTeX Info: Redefining \colon on input line 410.
+\classnum@=\count195
+\DOTSCASE@=\count196
+LaTeX Info: Redefining \ldots on input line 496.
+LaTeX Info: Redefining \dots on input line 499.
+LaTeX Info: Redefining \cdots on input line 620.
+\Mathstrutbox@=\box51
+\strutbox@=\box52
+LaTeX Info: Redefining \big on input line 722.
+LaTeX Info: Redefining \Big on input line 723.
+LaTeX Info: Redefining \bigg on input line 724.
+LaTeX Info: Redefining \Bigg on input line 725.
+\big@size=\dimen143
+LaTeX Font Info:    Redeclaring font encoding OML on input line 743.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 744.
+\macc@depth=\count197
+LaTeX Info: Redefining \bmod on input line 905.
+LaTeX Info: Redefining \pmod on input line 910.
+LaTeX Info: Redefining \smash on input line 940.
+LaTeX Info: Redefining \relbar on input line 970.
+LaTeX Info: Redefining \Relbar on input line 971.
+\c@MaxMatrixCols=\count198
+\dotsspace@=\muskip16
+\c@parentequation=\count199
+\dspbrk@lvl=\count266
+\tag@help=\toks20
+\row@=\count267
+\column@=\count268
+\maxfields@=\count269
+\andhelp@=\toks21
+\eqnshift@=\dimen144
+\alignsep@=\dimen145
+\tagshift@=\dimen146
+\tagwidth@=\dimen147
+\totwidth@=\dimen148
+\lineht@=\dimen149
+\@envbody=\toks22
+\multlinegap=\skip51
+\multlinetaggap=\skip52
+\mathdisplay@stack=\toks23
+LaTeX Info: Redefining \[ on input line 2953.
+LaTeX Info: Redefining \] on input line 2954.
+) (c:/texlive/2024/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+) (c:/texlive/2024/texmf-dist/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+) (c:/texlive/2024/texmf-dist/tex/latex/tools/bm.sty
+Package: bm 2023/07/08 v1.2f Bold Symbol Support (DPC/FMi)
+\symboldoperators=\mathgroup6
+\symboldletters=\mathgroup7
+\symboldsymbols=\mathgroup8
+Package bm Info: No bold for \OMX/cmex/m/n, using \pmb.
+Package bm Info: No bold for \U/msa/m/n, using \pmb.
+Package bm Info: No bold for \U/msb/m/n, using \pmb.
+LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 149.
+) (c:/texlive/2024/texmf-dist/tex/latex/geometry/geometry.sty
+Package: geometry 2020/01/02 v5.9 Page Geometry
+ (c:/texlive/2024/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks24
+) (c:/texlive/2024/texmf-dist/tex/generic/iftex/ifvtex.sty
+Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
+ (c:/texlive/2024/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2022/02/03 v1.0f TeX engine tests
+))
+\Gm@cnth=\count270
+\Gm@cntv=\count271
+\c@Gm@tempcnt=\count272
+\Gm@bindingoffset=\dimen150
+\Gm@wd@mp=\dimen151
+\Gm@odd@mp=\dimen152
+\Gm@even@mp=\dimen153
+\Gm@layoutwidth=\dimen154
+\Gm@layoutheight=\dimen155
+\Gm@layouthoffset=\dimen156
+\Gm@layoutvoffset=\dimen157
+\Gm@dimlist=\toks25
+) (c:/texlive/2024/texmf-dist/tex/latex/jknapltx/mathrsfs.sty
+Package: mathrsfs 1996/01/01 Math RSFS package v1.0 (jk)
+\symrsfs=\mathgroup9
+) (c:/texlive/2024/texmf-dist/tex/latex/l3backend/l3backend-xetex.def
+File: l3backend-xetex.def 2024-02-20 L3 backend support: XeTeX
+\g__graphics_track_int=\count273
+\l__pdf_internal_box=\box53
+\g__pdf_backend_object_int=\count274
+\g__pdf_backend_annotation_int=\count275
+\g__pdf_backend_link_int=\count276
+) (./t.aux)
+\openout1 = `t.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 14.
+LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 14.
+ (c:/texlive/2024/texmf-dist/tex/latex/base/ts1cmr.fd
+File: ts1cmr.fd 2023/04/13 v2.5m Standard LaTeX font definitions
+)
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 14.
+LaTeX Font Info:    ... okay on input line 14.
+
+*geometry* driver: auto-detecting
+*geometry* detected driver: xetex
+*geometry* verbose mode - [ preamble ] result:
+* driver: xetex
+* paper: a4paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(71.13188pt, 455.24411pt, 71.13188pt)
+* v-part:(T,H,B)=(71.13188pt, 702.78308pt, 71.13188pt)
+* \paperwidth=597.50787pt
+* \paperheight=845.04684pt
+* \textwidth=455.24411pt
+* \textheight=702.78308pt
+* \oddsidemargin=-1.1381pt
+* \evensidemargin=-1.1381pt
+* \topmargin=-38.1381pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=11.0pt
+* \footskip=30.0pt
+* \marginparwidth=50.0pt
+* \marginparsep=10.0pt
+* \columnsep=10.0pt
+* \skip\footins=10.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+Missing character: There is no 克 ("514B) in font ec-lmbx12!
+Missing character: There is no 拉 ("62C9) in font ec-lmbx12!
+Missing character: There is no 尼 ("5C3C) in font ec-lmbx12!
+Missing character: There is no 板 ("677F) in font ec-lmbx12!
+Missing character: There is no 控 ("63A7) in font ec-lmbx12!
+Missing character: There is no 制 ("5236) in font ec-lmbx12!
+Missing character: There is no 与 ("4E0E) in font ec-lmbx12!
+Missing character: There is no 变 ("53D8) in font ec-lmbx12!
+Missing character: There is no 厚 ("539A) in font ec-lmbx12!
+Missing character: There is no 度 ("5EA6) in font ec-lmbx12!
+Missing character: There is no 薄 ("8584) in font ec-lmbx12!
+Missing character: There is no 板 ("677F) in font ec-lmbx12!
+Missing character: There is no 振 ("632F) in font ec-lmbx12!
+Missing character: There is no 动 ("52A8) in font ec-lmbx12!
+Missing character: There is no 逆 ("9006) in font ec-lmbx12!
+Missing character: There is no 向 ("5411) in font ec-lmbx12!
+Missing character: There is no 设 ("8BBE) in font ec-lmbx12!
+Missing character: There is no 计 ("8BA1) in font ec-lmbx12!
+Missing character: There is no 理 ("7406) in font ec-lmbx12!
+Missing character: There is no 论 ("8BBA) in font ec-lmbx12!
+LaTeX Font Info:    Trying to load font information for U+msa on input line 16.
+(c:/texlive/2024/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 16.
+ (c:/texlive/2024/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+LaTeX Font Info:    Trying to load font information for U+rsfs on input line 16.
+ (c:/texlive/2024/texmf-dist/tex/latex/jknapltx/ursfs.fd
+File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
+)
+Missing character: There is no 一 ("4E00) in font ec-lmbx12!
+Missing character: There is no 、 ("3001) in font ec-lmbx12!
+Missing character: There is no 变 ("53D8) in font ec-lmbx12!
+Missing character: There is no 厚 ("539A) in font ec-lmbx12!
+Missing character: There is no 度 ("5EA6) in font ec-lmbx12!
+Missing character: There is no 自 ("81EA) in font ec-lmbx12!
+Missing character: There is no 由 ("7531) in font ec-lmbx12!
+Missing character: There is no 边 ("8FB9) in font ec-lmbx12!
+Missing character: There is no 界 ("754C) in font ec-lmbx12!
+Missing character: There is no 薄 ("8584) in font ec-lmbx12!
+Missing character: There is no 板 ("677F) in font ec-lmbx12!
+Missing character: There is no 受 ("53D7) in font ec-lmbx12!
+Missing character: There is no 迫 ("8FEB) in font ec-lmbx12!
+Missing character: There is no 振 ("632F) in font ec-lmbx12!
+Missing character: There is no 动 ("52A8) in font ec-lmbx12!
+Missing character: There is no 方 ("65B9) in font ec-lmbx12!
+Missing character: There is no 程 ("7A0B) in font ec-lmbx12!
+Missing character: There is no 推 ("63A8) in font ec-lmbx12!
+Missing character: There is no 导 ("5BFC) in font ec-lmbx12!
+Missing character: There is no 基 ("57FA) in font ec-lmbx12!
+Missing character: There is no 本 ("672C) in font ec-lmbx12!
+Missing character: There is no 假 ("5047) in font ec-lmbx12!
+Missing character: There is no 设 ("8BBE) in font ec-lmbx12!
+Missing character: There is no 与 ("4E0E) in font ec-lmbx12!
+Missing character: There is no 几 ("51E0) in font ec-lmbx12!
+Missing character: There is no 何 ("4F55) in font ec-lmbx12!
+Missing character: There is no 关 ("5173) in font ec-lmbx12!
+Missing character: There is no 系 ("7CFB) in font ec-lmbx12!
+Missing character: There is no 基 ("57FA) in font ec-lmr10!
+Missing character: There is no 于 ("4E8E) in font ec-lmr10!
+Missing character: There is no 薄 ("8584) in font ec-lmr10!
+Missing character: There is no 板 ("677F) in font ec-lmr10!
+Missing character: There is no 理 ("7406) in font ec-lmr10!
+Missing character: There is no 论 ("8BBA) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 假 ("5047) in font ec-lmr10!
+Missing character: There is no 设 ("8BBE) in font ec-lmr10!
+Missing character: There is no 中 ("4E2D) in font ec-lmr10!
+Missing character: There is no 面 ("9762) in font ec-lmr10!
+Missing character: There is no 内 ("5185) in font ec-lmr10!
+Missing character: There is no 无 ("65E0) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmr10!
+Missing character: There is no 形 ("5F62) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 且 ("4E14) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmr10!
+Missing character: There is no 形 ("5F62) in font ec-lmr10!
+Missing character: There is no 前 ("524D) in font ec-lmr10!
+Missing character: There is no 垂 ("5782) in font ec-lmr10!
+Missing character: There is no 直 ("76F4) in font ec-lmr10!
+Missing character: There is no 于 ("4E8E) in font ec-lmr10!
+Missing character: There is no 中 ("4E2D) in font ec-lmr10!
+Missing character: There is no 面 ("9762) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 直 ("76F4) in font ec-lmr10!
+Missing character: There is no 线 ("7EBF) in font ec-lmr10!
+Missing character: There is no 在 ("5728) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmr10!
+Missing character: There is no 形 ("5F62) in font ec-lmr10!
+Missing character: There is no 后 ("540E) in font ec-lmr10!
+Missing character: There is no 仍 ("4ECD) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 直 ("76F4) in font ec-lmr10!
+Missing character: There is no 线 ("7EBF) in font ec-lmr10!
+Missing character: There is no 且 ("4E14) in font ec-lmr10!
+Missing character: There is no 垂 ("5782) in font ec-lmr10!
+Missing character: There is no 直 ("76F4) in font ec-lmr10!
+Missing character: There is no 于 ("4E8E) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmr10!
+Missing character: There is no 形 ("5F62) in font ec-lmr10!
+Missing character: There is no 后 ("540E) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 中 ("4E2D) in font ec-lmr10!
+Missing character: There is no 面 ("9762) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 设 ("8BBE) in font ec-lmr10!
+Missing character: There is no 薄 ("8584) in font ec-lmr10!
+Missing character: There is no 板 ("677F) in font ec-lmr10!
+Missing character: There is no 厚 ("539A) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmr10!
+Missing character: There is no 量 ("91CF) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 材 ("6750) in font ec-lmr10!
+Missing character: There is no 料 ("6599) in font ec-lmr10!
+Missing character: There is no 密 ("5BC6) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 杨 ("6768) in font ec-lmr10!
+Missing character: There is no 氏 ("6C0F) in font ec-lmr10!
+Missing character: There is no 模 ("6A21) in font ec-lmr10!
+Missing character: There is no 量 ("91CF) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 泊 ("6CCA) in font ec-lmr10!
+Missing character: There is no 松 ("677E) in font ec-lmr10!
+Missing character: There is no 比 ("6BD4) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 板 ("677F) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 挠 ("6320) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no （ ("FF08) in font ec-lmr10!
+Missing character: There is no 中 ("4E2D) in font ec-lmr10!
+Missing character: There is no 面 ("9762) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 法 ("6CD5) in font ec-lmr10!
+Missing character: There is no 向 ("5411) in font ec-lmr10!
+Missing character: There is no 位 ("4F4D) in font ec-lmr10!
+Missing character: There is no 移 ("79FB) in font ec-lmr10!
+Missing character: There is no ） ("FF09) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 根 ("6839) in font ec-lmr10!
+Missing character: There is no 据 ("636E) in font ec-lmr10!
+Missing character: There is no 几 ("51E0) in font ec-lmr10!
+Missing character: There is no 何 ("4F55) in font ec-lmr10!
+Missing character: There is no 方 ("65B9) in font ec-lmr10!
+Missing character: There is no 程 ("7A0B) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 板 ("677F) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 曲 ("66F2) in font ec-lmr10!
+Missing character: There is no 率 ("7387) in font ec-lmr10!
+Missing character: There is no 与 ("4E0E) in font ec-lmr10!
+Missing character: There is no 扭 ("626D) in font ec-lmr10!
+Missing character: There is no 率 ("7387) in font ec-lmr10!
+Missing character: There is no 可 ("53EF) in font ec-lmr10!
+Missing character: There is no 表 ("8868) in font ec-lmr10!
+Missing character: There is no 示 ("793A) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 本 ("672C) in font ec-lmbx12!
+Missing character: There is no 构 ("6784) in font ec-lmbx12!
+Missing character: There is no 方 ("65B9) in font ec-lmbx12!
+Missing character: There is no 程 ("7A0B) in font ec-lmbx12!
+Missing character: There is no 与 ("4E0E) in font ec-lmbx12!
+Missing character: There is no 内 ("5185) in font ec-lmbx12!
+Missing character: There is no 力 ("529B) in font ec-lmbx12!
+Missing character: There is no 由 ("7531) in font ec-lmr10!
+Missing character: There is no 于 ("4E8E) in font ec-lmr10!
+Missing character: There is no 板 ("677F) in font ec-lmr10!
+Missing character: There is no 厚 ("539A) in font ec-lmr10!
+Missing character: There is no 是 ("662F) in font ec-lmr10!
+Missing character: There is no 空 ("7A7A) in font ec-lmr10!
+Missing character: There is no 间 ("95F4) in font ec-lmr10!
+Missing character: There is no 坐 ("5750) in font ec-lmr10!
+Missing character: There is no 标 ("6807) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 函 ("51FD) in font ec-lmr10!
+Missing character: There is no 数 ("6570) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 板 ("677F) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 抗 ("6297) in font ec-lmr10!
+Missing character: There is no 弯 ("5F2F) in font ec-lmr10!
+Missing character: There is no 刚 ("521A) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no 也 ("4E5F) in font ec-lmr10!
+Missing character: There is no 是 ("662F) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmr10!
+Missing character: There is no 参 ("53C2) in font ec-lmr10!
+Missing character: There is no 数 ("6570) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 对 ("5BF9) in font ec-lmr10!
+Missing character: There is no 厚 ("539A) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no 方 ("65B9) in font ec-lmr10!
+Missing character: There is no 向 ("5411) in font ec-lmr10!
+Missing character: There is no 积 ("79EF) in font ec-lmr10!
+Missing character: There is no 分 ("5206) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 可 ("53EF) in font ec-lmr10!
+Missing character: There is no 以 ("4EE5) in font ec-lmr10!
+Missing character: There is no 得 ("5F97) in font ec-lmr10!
+Missing character: There is no 到 ("5230) in font ec-lmr10!
+Missing character: There is no 弯 ("5F2F) in font ec-lmr10!
+Missing character: There is no 矩 ("77E9) in font ec-lmr10!
+Missing character: There is no 和 ("548C) in font ec-lmr10!
+Missing character: There is no 扭 ("626D) in font ec-lmr10!
+Missing character: There is no 矩 ("77E9) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmbx12!
+Missing character: There is no 厚 ("539A) in font ec-lmbx12!
+Missing character: There is no 度 ("5EA6) in font ec-lmbx12!
+Missing character: There is no 薄 ("8584) in font ec-lmbx12!
+Missing character: There is no 板 ("677F) in font ec-lmbx12!
+Missing character: There is no 受 ("53D7) in font ec-lmbx12!
+Missing character: There is no 迫 ("8FEB) in font ec-lmbx12!
+Missing character: There is no 振 ("632F) in font ec-lmbx12!
+Missing character: There is no 动 ("52A8) in font ec-lmbx12!
+Missing character: There is no 控 ("63A7) in font ec-lmbx12!
+Missing character: There is no 制 ("5236) in font ec-lmbx12!
+Missing character: There is no 方 ("65B9) in font ec-lmbx12!
+Missing character: There is no 程 ("7A0B) in font ec-lmbx12!
+Missing character: There is no 取 ("53D6) in font ec-lmr10!
+Missing character: There is no 微 ("5FAE) in font ec-lmr10!
+Missing character: There is no 元 ("5143) in font ec-lmr10!
+Missing character: There is no 体 ("4F53) in font ec-lmr10!
+Missing character: There is no 进 ("8FDB) in font ec-lmr10!
+Missing character: There is no 行 ("884C) in font ec-lmr10!
+Missing character: There is no 受 ("53D7) in font ec-lmr10!
+Missing character: There is no 力 ("529B) in font ec-lmr10!
+Missing character: There is no 分 ("5206) in font ec-lmr10!
+Missing character: There is no 析 ("6790) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 设 ("8BBE) in font ec-lmr10!
+Missing character: There is no 横 ("6A2A) in font ec-lmr10!
+Missing character: There is no 向 ("5411) in font ec-lmr10!
+Missing character: There is no 分 ("5206) in font ec-lmr10!
+Missing character: There is no 布 ("5E03) in font ec-lmr10!
+Missing character: There is no 载 ("8F7D) in font ec-lmr10!
+Missing character: There is no 荷 ("8377) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 惯 ("60EF) in font ec-lmr10!
+Missing character: There is no 性 ("6027) in font ec-lmr10!
+Missing character: There is no 力 ("529B) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 由 ("7531) in font ec-lmr10!
+Missing character: There is no 微 ("5FAE) in font ec-lmr10!
+Missing character: There is no 元 ("5143) in font ec-lmr10!
+Missing character: There is no 体 ("4F53) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 动 ("52A8) in font ec-lmr10!
+Missing character: There is no 量 ("91CF) in font ec-lmr10!
+Missing character: There is no 平 ("5E73) in font ec-lmr10!
+Missing character: There is no 衡 ("8861) in font ec-lmr10!
+Missing character: There is no 和 ("548C) in font ec-lmr10!
+Missing character: There is no 角 ("89D2) in font ec-lmr10!
+Missing character: There is no 动 ("52A8) in font ec-lmr10!
+Missing character: There is no 量 ("91CF) in font ec-lmr10!
+Missing character: There is no 平 ("5E73) in font ec-lmr10!
+Missing character: There is no 衡 ("8861) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 可 ("53EF) in font ec-lmr10!
+Missing character: There is no 得 ("5F97) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 代 ("4EE3) in font ec-lmr10!
+Missing character: There is no 入 ("5165) in font ec-lmr10!
+Missing character: There is no 内 ("5185) in font ec-lmr10!
+Missing character: There is no 力 ("529B) in font ec-lmr10!
+Missing character: There is no 表 ("8868) in font ec-lmr10!
+Missing character: There is no 达 ("8FBE) in font ec-lmr10!
+Missing character: There is no 式 ("5F0F) in font ec-lmr10!
+Missing character: There is no 并 ("5E76) in font ec-lmr10!
+Missing character: There is no 考 ("8003) in font ec-lmr10!
+Missing character: There is no 虑 ("8651) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 空 ("7A7A) in font ec-lmr10!
+Missing character: There is no 间 ("95F4) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmr10!
+Missing character: There is no 性 ("6027) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 展 ("5C55) in font ec-lmr10!
+Missing character: There is no 开 ("5F00) in font ec-lmr10!
+Missing character: There is no 并 ("5E76) in font ec-lmr10!
+Missing character: There is no 合 ("5408) in font ec-lmr10!
+Missing character: There is no 并 ("5E76) in font ec-lmr10!
+Missing character: There is no 同 ("540C) in font ec-lmr10!
+Missing character: There is no 类 ("7C7B) in font ec-lmr10!
+Missing character: There is no 项 ("9879) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 得 ("5F97) in font ec-lmr10!
+Missing character: There is no 到 ("5230) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmr10!
+Missing character: There is no 厚 ("539A) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no 薄 ("8584) in font ec-lmr10!
+Missing character: There is no 板 ("677F) in font ec-lmr10!
+Missing character: There is no 振 ("632F) in font ec-lmr10!
+Missing character: There is no 动 ("52A8) in font ec-lmr10!
+Missing character: There is no 控 ("63A7) in font ec-lmr10!
+Missing character: There is no 制 ("5236) in font ec-lmr10!
+Missing character: There is no 方 ("65B9) in font ec-lmr10!
+Missing character: There is no 程 ("7A0B) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 显 ("663E) in font ec-lmr10!
+Missing character: There is no 式 ("5F0F) in font ec-lmr10!
+Missing character: There is no 形 ("5F62) in font ec-lmr10!
+Missing character: There is no 式 ("5F0F) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 其 ("5176) in font ec-lmr10!
+Missing character: There is no 中 ("4E2D) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 若 ("82E5) in font ec-lmr10!
+Missing character: There is no 板 ("677F) in font ec-lmr10!
+Missing character: There is no 厚 ("539A) in font ec-lmr10!
+Missing character: There is no 均 ("5747) in font ec-lmr10!
+Missing character: There is no 匀 ("5300) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 常 ("5E38) in font ec-lmr10!
+Missing character: There is no 数 ("6570) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 方 ("65B9) in font ec-lmr10!
+Missing character: There is no 程 ("7A0B) in font ec-lmr10!
+Missing character: There is no 退 ("9000) in font ec-lmr10!
+Missing character: There is no 化 ("5316) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 经 ("7ECF) in font ec-lmr10!
+Missing character: There is no 典 ("5178) in font ec-lmr10!
+Missing character: There is no 形 ("5F62) in font ec-lmr10!
+Missing character: There is no 式 ("5F0F) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 连 ("8FDE) in font ec-lmbx12!
+Missing character: There is no 续 ("7EED) in font ec-lmbx12!
+Missing character: There is no 问 ("95EE) in font ec-lmbx12!
+Missing character: There is no 题 ("9898) in font ec-lmbx12!
+Missing character: There is no 的 ("7684) in font ec-lmbx12!
+Missing character: There is no 算 ("7B97) in font ec-lmbx12!
+Missing character: There is no 子 ("5B50) in font ec-lmbx12!
+Missing character: There is no 形 ("5F62) in font ec-lmbx12!
+Missing character: There is no 式 ("5F0F) in font ec-lmbx12!
+Missing character: There is no ： ("FF1A) in font ec-lmbx12!
+Missing character: There is no 设 ("8BBE) in font ec-lmr10!
+Missing character: There is no 稳 ("7A33) in font ec-lmr10!
+Missing character: There is no 态 ("6001) in font ec-lmr10!
+Missing character: There is no 简 ("7B80) in font ec-lmr10!
+Missing character: There is no 谐 ("8C10) in font ec-lmr10!
+Missing character: There is no 载 ("8F7D) in font ec-lmr10!
+Missing character: There is no 荷 ("8377) in font ec-lmr10!
+Missing character: There is no 和 ("548C) in font ec-lmr10!
+Missing character: There is no 响 ("54CD) in font ec-lmr10!
+Missing character: There is no 应 ("5E94) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 线 ("7EBF) in font ec-lmr10!
+Missing character: There is no 性 ("6027) in font ec-lmr10!
+Missing character: There is no 算 ("7B97) in font ec-lmr10!
+Missing character: There is no 子 ("5B50) in font ec-lmr10!
+Missing character: There is no 方 ("65B9) in font ec-lmr10!
+Missing character: There is no 程 ("7A0B) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 其 ("5176) in font ec-lmr10!
+Missing character: There is no 中 ("4E2D) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 质 ("8D28) in font ec-lmbx10!
+Missing character: There is no 量 ("91CF) in font ec-lmbx10!
+Missing character: There is no 算 ("7B97) in font ec-lmbx10!
+Missing character: There is no 子 ("5B50) in font ec-lmbx10!
+Missing character: There is no 定 ("5B9A) in font ec-lmr10!
+Missing character: There is no 义 ("4E49) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no ； ("FF1B) in font ec-lmr10!
+Missing character: There is no 刚 ("521A) in font ec-lmbx10!
+Missing character: There is no 度 ("5EA6) in font ec-lmbx10!
+Missing character: There is no 算 ("7B97) in font ec-lmbx10!
+Missing character: There is no 子 ("5B50) in font ec-lmbx10!
+Missing character: There is no 定 ("5B9A) in font ec-lmr10!
+Missing character: There is no 义 ("4E49) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+[1
+
+]
+Missing character: There is no 二 ("4E8C) in font ec-lmbx12!
+Missing character: There is no 、 ("3001) in font ec-lmbx12!
+Missing character: There is no 能 ("80FD) in font ec-lmbx12!
+Missing character: There is no 量 ("91CF) in font ec-lmbx12!
+Missing character: There is no 泛 ("6CDB) in font ec-lmbx12!
+Missing character: There is no 函 ("51FD) in font ec-lmbx12!
+Missing character: There is no 方 ("65B9) in font ec-lmbx12!
+Missing character: There is no 法 ("6CD5) in font ec-lmbx12!
+Missing character: There is no 连 ("8FDE) in font ec-lmbx12!
+Missing character: There is no 续 ("7EED) in font ec-lmbx12!
+Missing character: There is no 系 ("7CFB) in font ec-lmbx12!
+Missing character: There is no 统 ("7EDF) in font ec-lmbx12!
+Missing character: There is no 的 ("7684) in font ec-lmbx12!
+Missing character: There is no 稳 ("7A33) in font ec-lmbx12!
+Missing character: There is no 态 ("6001) in font ec-lmbx12!
+Missing character: There is no 能 ("80FD) in font ec-lmbx12!
+Missing character: There is no 量 ("91CF) in font ec-lmbx12!
+Missing character: There is no 泛 ("6CDB) in font ec-lmbx12!
+Missing character: There is no 函 ("51FD) in font ec-lmbx12!
+Missing character: There is no 对 ("5BF9) in font ec-lmr10!
+Missing character: There is no 于 ("4E8E) in font ec-lmr10!
+Missing character: There is no 简 ("7B80) in font ec-lmr10!
+Missing character: There is no 谐 ("8C10) in font ec-lmr10!
+Missing character: There is no 受 ("53D7) in font ec-lmr10!
+Missing character: There is no 迫 ("8FEB) in font ec-lmr10!
+Missing character: There is no 振 ("632F) in font ec-lmr10!
+Missing character: There is no 动 ("52A8) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 系 ("7CFB) in font ec-lmr10!
+Missing character: There is no 统 ("7EDF) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 总 ("603B) in font ec-lmr10!
+Missing character: There is no 能 ("80FD) in font ec-lmr10!
+Missing character: There is no 量 ("91CF) in font ec-lmr10!
+Missing character: There is no 泛 ("6CDB) in font ec-lmr10!
+Missing character: There is no 函 ("51FD) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 真 ("771F) in font ec-lmr10!
+Missing character: There is no 实 ("5B9E) in font ec-lmr10!
+Missing character: There is no 物 ("7269) in font ec-lmr10!
+Missing character: There is no 理 ("7406) in font ec-lmr10!
+Missing character: There is no 场 ("573A) in font ec-lmr10!
+Missing character: There is no 满 ("6EE1) in font ec-lmr10!
+Missing character: There is no 足 ("8DB3) in font ec-lmr10!
+Missing character: There is no 变 ("53D8) in font ec-lmr10!
+Missing character: There is no 分 ("5206) in font ec-lmr10!
+Missing character: There is no 原 ("539F) in font ec-lmr10!
+Missing character: There is no 理 ("7406) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 此 ("6B64) in font ec-lmr10!
+Missing character: There is no 时 ("65F6) in font ec-lmr10!
+Missing character: There is no 自 ("81EA) in font ec-lmr10!
+Missing character: There is no 由 ("7531) in font ec-lmr10!
+Missing character: There is no 边 ("8FB9) in font ec-lmr10!
+Missing character: There is no 界 ("754C) in font ec-lmr10!
+Missing character: There is no 条 ("6761) in font ec-lmr10!
+Missing character: There is no 件 ("4EF6) in font ec-lmr10!
+Missing character: There is no 作 ("4F5C) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 系 ("7CFB) in font ec-lmr10!
+Missing character: There is no 统 ("7EDF) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 自 ("81EA) in font ec-lmr10!
+Missing character: There is no 然 ("7136) in font ec-lmr10!
+Missing character: There is no 边 ("8FB9) in font ec-lmr10!
+Missing character: There is no 界 ("754C) in font ec-lmr10!
+Missing character: There is no 条 ("6761) in font ec-lmr10!
+Missing character: There is no 件 ("4EF6) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 空 ("7A7A) in font ec-lmbx12!
+Missing character: There is no 间 ("95F4) in font ec-lmbx12!
+Missing character: There is no 离 ("79BB) in font ec-lmbx12!
+Missing character: There is no 散 ("6563) in font ec-lmbx12!
+Missing character: There is no 与 ("4E0E) in font ec-lmbx12!
+Missing character: There is no 二 ("4E8C) in font ec-lmbx12!
+Missing character: There is no 次 ("6B21) in font ec-lmbx12!
+Missing character: There is no 型 ("578B) in font ec-lmbx12!
+Missing character: There is no 泛 ("6CDB) in font ec-lmbx12!
+Missing character: There is no 函 ("51FD) in font ec-lmbx12!
+Missing character: There is no 利 ("5229) in font ec-lmr10!
+Missing character: There is no 用 ("7528) in font ec-lmr10!
+Missing character: There is no 基 ("57FA) in font ec-lmr10!
+Missing character: There is no 函 ("51FD) in font ec-lmr10!
+Missing character: There is no 数 ("6570) in font ec-lmr10!
+Missing character: There is no 离 ("79BB) in font ec-lmr10!
+Missing character: There is no 散 ("6563) in font ec-lmr10!
+Missing character: There is no 化 ("5316) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 泛 ("6CDB) in font ec-lmr10!
+Missing character: There is no 函 ("51FD) in font ec-lmr10!
+Missing character: There is no 退 ("9000) in font ec-lmr10!
+Missing character: There is no 化 ("5316) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 离 ("79BB) in font ec-lmr10!
+Missing character: There is no 散 ("6563) in font ec-lmr10!
+Missing character: There is no 二 ("4E8C) in font ec-lmr10!
+Missing character: There is no 次 ("6B21) in font ec-lmr10!
+Missing character: There is no 型 ("578B) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 梯 ("68AF) in font ec-lmbx12!
+Missing character: There is no 度 ("5EA6) in font ec-lmbx12!
+Missing character: There is no 寻 ("5BFB) in font ec-lmbx12!
+Missing character: There is no 优 ("4F18) in font ec-lmbx12!
+Missing character: There is no 与 ("4E0E) in font ec-lmbx12!
+Missing character: There is no 矩 ("77E9) in font ec-lmbx12!
+Missing character: There is no 阵 ("9635) in font ec-lmbx12!
+Missing character: There is no 求 ("6C42) in font ec-lmbx12!
+Missing character: There is no 解 ("89E3) in font ec-lmbx12!
+Missing character: There is no 求 ("6C42) in font ec-lmr10!
+Missing character: There is no 解 ("89E3) in font ec-lmr10!
+Missing character: There is no 驻 ("9A7B) in font ec-lmr10!
+Missing character: There is no 点 ("70B9) in font ec-lmr10!
+Missing character: There is no 即 ("5373) in font ec-lmr10!
+Missing character: There is no 令 ("4EE4) in font ec-lmr10!
+Missing character: There is no 梯 ("68AF) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no 零 ("96F6) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 系 ("7CFB) in font ec-lmr10!
+Missing character: There is no 统 ("7EDF) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 矩 ("77E9) in font ec-lmbx10!
+Missing character: There is no 阵 ("9635) in font ec-lmbx10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 三 ("4E09) in font ec-lmbx12!
+Missing character: There is no 、 ("3001) in font ec-lmbx12!
+Missing character: There is no 伴 ("4F34) in font ec-lmbx12!
+Missing character: There is no 随 ("968F) in font ec-lmbx12!
+Missing character: There is no 方 ("65B9) in font ec-lmbx12!
+Missing character: There is no 法 ("6CD5) in font ec-lmbx12!
+Missing character: There is no 数 ("6570) in font ec-lmbx12!
+Missing character: There is no 学 ("5B66) in font ec-lmbx12!
+Missing character: There is no 原 ("539F) in font ec-lmbx12!
+Missing character: There is no 理 ("7406) in font ec-lmbx12!
+Missing character: There is no 问 ("95EE) in font ec-lmbx12!
+Missing character: There is no 题 ("9898) in font ec-lmbx12!
+Missing character: There is no 定 ("5B9A) in font ec-lmbx12!
+Missing character: There is no 义 ("4E49) in font ec-lmbx12!
+Missing character: There is no 控 ("63A7) in font ec-lmr10!
+Missing character: There is no 制 ("5236) in font ec-lmr10!
+Missing character: There is no 方 ("65B9) in font ec-lmr10!
+Missing character: There is no 程 ("7A0B) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 目 ("76EE) in font ec-lmr10!
+Missing character: There is no 标 ("6807) in font ec-lmr10!
+Missing character: There is no 是 ("662F) in font ec-lmr10!
+Missing character: There is no 最 ("6700) in font ec-lmr10!
+Missing character: There is no 小 ("5C0F) in font ec-lmr10!
+Missing character: There is no 化 ("5316) in font ec-lmr10!
+Missing character: There is no 目 ("76EE) in font ec-lmr10!
+Missing character: There is no 标 ("6807) in font ec-lmr10!
+Missing character: There is no 函 ("51FD) in font ec-lmr10!
+Missing character: There is no 数 ("6570) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 梯 ("68AF) in font ec-lmbx12!
+Missing character: There is no 度 ("5EA6) in font ec-lmbx12!
+Missing character: There is no 推 ("63A8) in font ec-lmbx12!
+Missing character: There is no 导 ("5BFC) in font ec-lmbx12!
+Missing character: There is no 与 ("4E0E) in font ec-lmbx12!
+Missing character: There is no 困 ("56F0) in font ec-lmbx12!
+Missing character: There is no 境 ("5883) in font ec-lmbx12!
+Missing character: There is no 全 ("5168) in font ec-lmr10!
+Missing character: There is no 导 ("5BFC) in font ec-lmr10!
+Missing character: There is no 数 ("6570) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 由 ("7531) in font ec-lmr10!
+Missing character: There is no 控 ("63A7) in font ec-lmr10!
+Missing character: There is no 制 ("5236) in font ec-lmr10!
+Missing character: There is no 方 ("65B9) in font ec-lmr10!
+Missing character: There is no 程 ("7A0B) in font ec-lmr10!
+Missing character: There is no 对 ("5BF9) in font ec-lmr10!
+Missing character: There is no 参 ("53C2) in font ec-lmr10!
+Missing character: There is no 数 ("6570) in font ec-lmr10!
+Missing character: There is no 求 ("6C42) in font ec-lmr10!
+Missing character: There is no 导 ("5BFC) in font ec-lmr10!
+Missing character: There is no 得 ("5F97) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 从 ("4ECE) in font ec-lmr10!
+Missing character: There is no 而 ("800C) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 伴 ("4F34) in font ec-lmbx12!
+Missing character: There is no 随 ("968F) in font ec-lmbx12!
+Missing character: There is no 法 ("6CD5) in font ec-lmbx12!
+Missing character: There is no 推 ("63A8) in font ec-lmbx12!
+Missing character: There is no 导 ("5BFC) in font ec-lmbx12!
+Missing character: There is no 引 ("5F15) in font ec-lmr10!
+Missing character: There is no 入 ("5165) in font ec-lmr10!
+Missing character: There is no 伴 ("4F34) in font ec-lmbx10!
+Missing character: There is no 随 ("968F) in font ec-lmbx10!
+Missing character: There is no 变 ("53D8) in font ec-lmbx10!
+Missing character: There is no 量 ("91CF) in font ec-lmbx10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 满 ("6EE1) in font ec-lmr10!
+Missing character: There is no 足 ("8DB3) in font ec-lmr10!
+Missing character: There is no 伴 ("4F34) in font ec-lmr10!
+Missing character: There is no 随 ("968F) in font ec-lmr10!
+Missing character: There is no 方 ("65B9) in font ec-lmr10!
+Missing character: There is no 程 ("7A0B) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 最 ("6700) in font ec-lmr10!
+Missing character: There is no 终 ("7EC8) in font ec-lmr10!
+Missing character: There is no 梯 ("68AF) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no 公 ("516C) in font ec-lmr10!
+Missing character: There is no 式 ("5F0F) in font ec-lmr10!
+Missing character: There is no 简 ("7B80) in font ec-lmr10!
+Missing character: There is no 化 ("5316) in font ec-lmr10!
+Missing character: There is no 为 ("4E3A) in font ec-lmr10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 算 ("7B97) in font ec-lmbx12!
+Missing character: There is no 法 ("6CD5) in font ec-lmbx12!
+Missing character: There is no 优 ("4F18) in font ec-lmbx12!
+Missing character: There is no 势 ("52BF) in font ec-lmbx12!
+Missing character: There is no 效 ("6548) in font ec-lmbx10!
+Missing character: There is no 率 ("7387) in font ec-lmbx10!
+Missing character: There is no 高 ("9AD8) in font ec-lmbx10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 计 ("8BA1) in font ec-lmr10!
+Missing character: There is no 算 ("7B97) in font ec-lmr10!
+Missing character: There is no 梯 ("68AF) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no 仅 ("4EC5) in font ec-lmr10!
+Missing character: There is no 需 ("9700) in font ec-lmr10!
+Missing character: There is no 额 ("989D) in font ec-lmr10!
+Missing character: There is no 外 ("5916) in font ec-lmr10!
+Missing character: There is no 求 ("6C42) in font ec-lmr10!
+Missing character: There is no 解 ("89E3) in font ec-lmr10!
+Missing character: There is no 一 ("4E00) in font ec-lmr10!
+Missing character: There is no 次 ("6B21) in font ec-lmr10!
+Missing character: There is no 伴 ("4F34) in font ec-lmr10!
+Missing character: There is no 随 ("968F) in font ec-lmr10!
+Missing character: There is no 方 ("65B9) in font ec-lmr10!
+Missing character: There is no 程 ("7A0B) in font ec-lmr10!
+Missing character: There is no ， ("FF0C) in font ec-lmr10!
+Missing character: There is no 与 ("4E0E) in font ec-lmr10!
+Missing character: There is no 参 ("53C2) in font ec-lmr10!
+Missing character: There is no 数 ("6570) in font ec-lmr10!
+Missing character: There is no 维 ("7EF4) in font ec-lmr10!
+Missing character: There is no 度 ("5EA6) in font ec-lmr10!
+Missing character: There is no 无 ("65E0) in font ec-lmr10!
+Missing character: There is no 关 ("5173) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+[2]
+Missing character: There is no 复 ("590D) in font ec-lmbx10!
+Missing character: There is no 用 ("7528) in font ec-lmbx10!
+Missing character: There is no 性 ("6027) in font ec-lmbx10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 可 ("53EF) in font ec-lmr10!
+Missing character: There is no 复 ("590D) in font ec-lmr10!
+Missing character: There is no 用 ("7528) in font ec-lmr10!
+Missing character: There is no 正 ("6B63) in font ec-lmr10!
+Missing character: There is no 向 ("5411) in font ec-lmr10!
+Missing character: There is no 求 ("6C42) in font ec-lmr10!
+Missing character: There is no 解 ("89E3) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 矩 ("77E9) in font ec-lmr10!
+Missing character: There is no 阵 ("9635) in font ec-lmr10!
+Missing character: There is no 分 ("5206) in font ec-lmr10!
+Missing character: There is no 解 ("89E3) in font ec-lmr10!
+Missing character: There is no 结 ("7ED3) in font ec-lmr10!
+Missing character: There is no 果 ("679C) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+Missing character: There is no 节 ("8282) in font ec-lmbx10!
+Missing character: There is no 省 ("7701) in font ec-lmbx10!
+Missing character: There is no 内 ("5185) in font ec-lmbx10!
+Missing character: There is no 存 ("5B58) in font ec-lmbx10!
+Missing character: There is no ： ("FF1A) in font ec-lmr10!
+Missing character: There is no 无 ("65E0) in font ec-lmr10!
+Missing character: There is no 需 ("9700) in font ec-lmr10!
+Missing character: There is no 存 ("5B58) in font ec-lmr10!
+Missing character: There is no 储 ("50A8) in font ec-lmr10!
+Missing character: There is no 自 ("81EA) in font ec-lmr10!
+Missing character: There is no 动 ("52A8) in font ec-lmr10!
+Missing character: There is no 微 ("5FAE) in font ec-lmr10!
+Missing character: There is no 分 ("5206) in font ec-lmr10!
+Missing character: There is no 的 ("7684) in font ec-lmr10!
+Missing character: There is no 计 ("8BA1) in font ec-lmr10!
+Missing character: There is no 算 ("7B97) in font ec-lmr10!
+Missing character: There is no 图 ("56FE) in font ec-lmr10!
+Missing character: There is no 。 ("3002) in font ec-lmr10!
+[3] (./t.aux)
+ ***********
+LaTeX2e <2023-11-01> patch level 1
+L3 programming layer <2024-02-20>
+ ***********
+ ) 
+Here is how much of TeX's memory you used:
+ 2771 strings out of 474772
+ 39884 string characters out of 5761268
+ 1931842 words of memory out of 5000000
+ 24906 multiletter control sequences out of 15000+600000
+ 592976 words of font info for 86 fonts, out of 8000000 for 9000
+ 1348 hyphenation exceptions out of 8191
+ 57i,10n,65p,453b,229s stack positions out of 10000i,1000n,20000p,200000b,200000s
+
+Output written on t.xdv (3 pages, 9264 bytes).

@@ -14,7 +14,7 @@ def process_target_image_smooth(image_path: str, N: int, sigma: float = 3.0) -> 
 
     dist_field = cv2.distanceTransform(binary, distanceType=cv2.DIST_L2, maskSize=5)
 
-    target_pattern = np.exp(-(dist_field / sigma)**2)
+    target_pattern = 1-np.exp(-(dist_field / sigma)**2)
 
     # target_pattern = np.flipud(target_pattern)
 
@@ -24,30 +24,29 @@ def process_target_image_smooth(image_path: str, N: int, sigma: float = 3.0) -> 
 if __name__ == "__main__":
     N = 64
     
-    # img_test = np.ones((N, N), dtype=np.uint8) * 255
-    # font = cv2.FONT_HERSHEY_SIMPLEX
-    # text = "S"
-    # font_scale = 2  # 足够大的字号
-    # thickness = 2   # 增加厚度，防止在 64x64 分辨率下丢失
+    img_test = np.ones((N, N), dtype=np.uint8) * 0
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    text = "S"
+    font_scale = 2  # 足够大的字号
+    thickness = 2   # 增加厚度，防止在 64x64 分辨率下丢失
     
-    # # 3. 计算文字大小以便居中
-    # text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
-    # text_x = (N - text_size[0]) // 2
-    # text_y = (N + text_size[1]) // 2 # 注意 y 坐标在 OpenCV 里是基线
+    # 3. 计算文字大小以便居中
+    text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+    text_x = (N - text_size[0]) // 2
+    text_y = (N + text_size[1]) // 2 # 注意 y 坐标在 OpenCV 里是基线
     
-    # # 4. 在图上绘制黑色字母 S (0, 0, 0)
-    # # 因为你的逻辑是 1.0 - target，所以黑色的线最终会变成 1.0 的目标区
-    # cv2.putText(img_test, text, (text_x, text_y), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
+    # 4. 在图上绘制黑色字母 S (0, 0, 0)
+    cv2.putText(img_test, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
 
-    img_test = np.ones((500, 500), dtype=np.uint8) * 255
-    cv2.circle(img_test, (250, 250), 150, 0, 20) 
+    # img_test = np.ones((500, 500), dtype=np.uint8) * 255
+    # cv2.circle(img_test, (250, 250), 150, 0, 20) 
     
     cv2.imwrite("target.jpg", img_test)
 
     
     plt.figure(figsize=(5, 5), facecolor='black')
 
-    target_pattern = process_target_image_smooth("target.jpg", N, sigma=1.0)
+    target_pattern = process_target_image_smooth("pattern.png", N, sigma=1.0)
     
     img_to_save = (target_pattern * 255).astype(np.uint8)
     cv2.imwrite("target_processed.jpg", img_to_save)
