@@ -17,6 +17,10 @@ wp.init()
 MIN_H = 0.0001
 MAX_H= 0.01
 max_steps = 100000
+FREQ_MIN = 10.0
+FREQ_MAX = 5000.0
+FREQ_SWEEP_POINTS = 1000
+FREQ_SWEEP_INTERVAL = 100
 
 def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
  
@@ -30,7 +34,7 @@ def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
 
     
     material_mask = torch.sigmoid((h_2d - MIN_H) * 1e10)
-    penalty_value = 100000.0 
+    penalty_value = 1000.0 
     effective_amp =( amp * material_mask + penalty_value * (1.0 - material_mask))
 
     # effective_amp = amp
@@ -45,7 +49,6 @@ def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
     l2 = physics_informed_loss(effective_amp, target)*5.0
 
     l1 = ssim_loss(display, target.reshape(1, 1, N, N))*10.0
-    # l3 = lpips_loss(display, target.reshape(1, 1, N, N))*10.0
     l3 = quantile_physics_loss(effective_amp, target.reshape(1, 1, N, N), q=0.10)*1.0
     l3 = torch.clamp(l3, 0.0, 50.0)
 
@@ -57,6 +60,32 @@ def compute_loss_and_adjoint_force(h_tensor,wr_np, wi_np, N, target_pattern):
     # total_loss.backward()
     total_loss.backward(retain_graph=True)
     return total_loss.item(), wr.grad.cpu().numpy(), wi.grad.cpu().numpy(), l1.item(),l2.item(), l3.mean().item()
+
+
+def evaluate_total_loss_no_grad(h_tensor, wr_np, wi_np, N, target_pattern):
+    with torch.no_grad():
+        wr = torch.from_numpy(wr_np).cuda().float()
+        wi = torch.from_numpy(wi_np).cuda().float()
+        target = torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N)
+
+        amp = torch.sqrt(wr**2 + wi**2 + 1e-12).reshape(1, 1, N, N)
+        h_2d = h_tensor.reshape(1, 1, N, N)
+
+        material_mask = torch.sigmoid((h_2d - MIN_H) * 1e10)
+        penalty_value = 1000.0
+        effective_amp = amp * material_mask + penalty_value * (1.0 - material_mask)
+
+        clip_max = torch.max(amp).clamp(min=1e-10)
+        display = torch.exp(-(effective_amp / (clip_max * 0.15 + 1e-12))**2)
+
+        l2 = physics_informed_loss(effective_amp, target) * 5.0
+        l1 = ssim_loss(display, target) * 10.0
+        l3 = quantile_physics_loss(effective_amp, target, q=0.10) * 1.0
+        l3 = torch.clamp(l3, 0.0, 50.0)
+        l4 = void_protection_loss(h_tensor, target)
+
+        total_loss = l1 + l2 + l3.mean() + l4
+        return total_loss.item()
 
 def generate_gaussian_force(N, positions, sigma=0.02):
     x = torch.linspace(0, 1, N, device="cuda")
@@ -248,16 +277,90 @@ def main(resume_step=None,num_sources=1):
 
 
     optimizer = optim.Adam([
-        {'params': [rho_tensor], 'lr': 1},
+        {'params': [rho_tensor], 'lr': 0.1},
         {'params': pos_tensor, 'lr': 0.05},  
-        {'params': freq_tensor, 'lr': 100.0}  
+        {'params': freq_tensor, 'lr': 1.0}  
     ])
+
+    def update_visualization(h_phys_tensor, w_complex_np, force_np, step_idx, freq_hz, loss_value, phase="Train"):
+        h_phys_np = h_phys_tensor.detach().cpu().numpy().reshape(N, N)
+        amp = np.abs(w_complex_np).reshape(N, N)
+        clip_max = np.max(amp)
+        display = np.exp(-(amp / (clip_max * 0.15 + 1e-15))**2)
+
+        norm = np.max(display)
+        if norm > 1e-12:
+            display = display / norm
+
+        masked_h = np.ma.masked_where(h_phys_np < MIN_H, h_phys_np)
+        masked_display = np.ma.masked_where(h_phys_np < MIN_H, display)
+        im1.set_data(masked_display)
+
+        material_mask = 1 / (1 + np.exp(-((h_phys_np - MIN_H) * 1e10)))
+        penalty_value = 100000.0
+        effective_amp = amp * material_mask + penalty_value * (1.0 - material_mask)
+        im2.set_data(np.log10((effective_amp + 1e-12)).reshape(N, N))
+
+        for c in ax2.collections:
+            c.remove()
+        energy_field = (w_complex_np.real**2 + w_complex_np.imag**2).reshape(N, N)
+        non_zero_energy = energy_field[energy_field > 1e-18]
+        if non_zero_energy.size > 0:
+            threshold = np.percentile(non_zero_energy, 10)
+            ax2.contour(X_grid, Y_grid, energy_field, levels=[threshold], colors='white', linewidths=1.5)
+        im2.set_clim(np.min(np.log10(amp + 1e-12)), np.max(np.log10(amp + 1e-12)))
+
+        im3.set_data(masked_h * 1000.0)
+        im4.set_data(force_np.reshape(N, N))
+
+        ax1.set_title(f"{phase} | Step: {step_idx} | Loss: {loss_value:.4f}\nFreq: {freq_hz:.1f} Hz", color='white')
+        fig.canvas.draw_idle()
+        fig.canvas.flush_events()
 
     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=100, factor=0.5)
     for step in range(int(max_steps)):
         optimizer.zero_grad()
         
-        current_sigma = max(0.1, 2.0 * (1 - step / 5000))
+        current_sigma = max(0.0, 1.0 * (1 - step / 5000))
+
+        if step > 0 and step % FREQ_SWEEP_INTERVAL == 0:
+            with torch.no_grad():
+                h_diffused_eval = apply_diffusion(rho_tensor, current_sigma)
+                h_phys_eval = get_physical_h(h_diffused_eval)
+                force_eval = generate_gaussian_force(N, pos_tensor)
+                fr_eval_np = force_eval.detach().cpu().numpy().astype(np.float32)
+                h_eval_wp = wp.from_torch(h_phys_eval.flatten())
+                fr_eval_wp = wp.from_numpy(fr_eval_np, device="cuda")
+
+                best_freq = float(freq_tensor.item())
+                best_loss = float("inf")
+                freq_candidates = np.linspace(FREQ_MIN, FREQ_MAX, FREQ_SWEEP_POINTS, dtype=np.float32)
+
+                for f in freq_candidates:
+                    p.omega = 2.0 * np.pi * float(f)
+                    w_complex_eval = chladni_solver.solve(h_eval_wp, fr_eval_wp, fi_wp)
+                    loss_eval = evaluate_total_loss_no_grad(
+                        h_phys_eval,
+                        w_complex_eval.real,
+                        w_complex_eval.imag,
+                        N,
+                        target_pattern
+                    )
+                    update_visualization(
+                        h_phys_eval,
+                        w_complex_eval,
+                        fr_eval_np,
+                        step,
+                        float(f),
+                        loss_eval,
+                        phase="Sweep"
+                    )
+                    if loss_eval < best_loss:
+                        best_loss = loss_eval
+                        best_freq = float(f)
+
+                freq_tensor.copy_(torch.tensor([best_freq], device="cuda", dtype=torch.float32))
+                print(f"[Freq Sweep] Step {step:04d} | Best Freq: {best_freq:.2f} Hz | Loss: {best_loss:.6f}")
 
         curr_freq = freq_tensor.item()
         p.omega = 2.0 * np.pi * curr_freq
@@ -292,15 +395,22 @@ def main(resume_step=None,num_sources=1):
 
             grad_h, grad_fr_np, grad_omega = chladni_solver.compute_adjoint_gradient(h_wp, w_complex, grad_w_complex)
             gh_torch = torch.from_numpy(grad_h).cuda().float().reshape(1, 1, N, N)
-            target_mask = torch.from_numpy(target_pattern).cuda().float().reshape(N, N)
-            active_protection_mask = (target_mask < 0.5) & (gh_torch > 0)
-            gh_torch[active_protection_mask] = 0.0
+            # target_mask = torch.from_numpy(target_pattern).cuda().float().reshape(N, N)
+            # active_protection_mask = (target_mask < 0.5) & (gh_torch > 0)
+            # gh_torch[active_protection_mask] = 0.0
             gh_smooth = torch.nn.functional.avg_pool2d(gh_torch, kernel_size=3, stride=1, padding=1)
-            gh_phys_final = gh_smooth / (torch.norm(gh_smooth) + 1e-10)
+            gh_phys_final = gh_smooth / (torch.abs(gh_smooth).max() + 1e-10)
 
             # h_phys.grad =gh_phys_final.flatten()+grad_protect
             h_phys.backward(gradient=gh_phys_final)
-            
+            with torch.no_grad():
+                if step < 10000:
+                    low_res_size = 6 
+                    low_res_noise = torch.randn(1, 1, low_res_size, low_res_size, device="cuda")
+                    g_noise = F.interpolate(low_res_noise, size=(N, N), mode='bicubic', align_corners=False)
+                    current_grad_mag = rho_tensor.grad.abs().mean()
+                    noise_strength =(0.1 +current_grad_mag)  * 100 * (1 - step / 10000)
+                    rho_tensor.grad.add_(g_noise.view_as(rho_tensor.grad) * noise_strength)
 
             # 厚度 
             # grad_norm = np.max(np.abs(grad_h)) + 1e-10
@@ -329,10 +439,15 @@ def main(resume_step=None,num_sources=1):
             
             with torch.no_grad():
                 pos_tensor.clamp_(0.05, 0.95)
-                freq_tensor.clamp_(10.0, 20000.0)
-                noise_std = 10.0 * (1 - step / 5000)
-                noise = torch.randn_like(rho_tensor) * noise_std
-                rho_tensor.add_(noise)
+                freq_tensor.clamp_(FREQ_MIN, FREQ_MAX)
+
+                if step % 20 == 0:
+                    low_res_size = 8 
+                    low_res_noise = torch.randn(1, 1, low_res_size, low_res_size, device="cuda")
+                    continuous_noise = F.interpolate(low_res_noise, size=(N, N), mode='bicubic', align_corners=False)
+                    noise_strength = 0.5* (1 - step / 10000) 
+                    rho_tensor.add_(continuous_noise.view(1, 1, N, N) * noise_strength)
+              
                 rho_tensor.clamp_(0, 1)
                 # h_tensor.clamp_(MIN_H/2, MAX_H)
                 # h_np = h_tensor.cpu().numpy()
@@ -358,48 +473,7 @@ def main(resume_step=None,num_sources=1):
 
 
             if step %1 ==0:
-                h_phys_np = h_phys.detach().cpu().numpy().reshape(N, N)
-                amp = np.abs(w_complex).reshape(N, N)
-                clip_max = np.max(amp)
-                display = np.exp(-(amp / (clip_max * 0.15 + 1e-15))**2)
-                
-                norm = np.max(display)
-                display = display / norm
-
-                masked_h = np.ma.masked_where(h_phys_np.reshape(N, N) < MIN_H, h_phys_np.reshape(N, N))
-                masked_display = np.ma.masked_where(h_phys_np.reshape(N, N) < MIN_H, display)
-
-
-
-                im1.set_data(masked_display)
-                
-                
-                material_mask = 1 / (1 + np.exp(-((h_phys_np.reshape(N, N) - MIN_H) * 1e10)))
-                penalty_value = 100000.0 
-                effective_amp =( amp * material_mask + penalty_value * (1.0 - material_mask))
-
-                im2.set_data(np.log10((effective_amp+1e-12)).reshape(N, N))
-
-                for c in ax2.collections:
-                    c.remove()
-                
-                energy_field = (wr_np**2 + wi_np**2).reshape( N, N)
-                non_zero_energy = energy_field[energy_field > 1e-18]
-                if non_zero_energy.size > 0:
-                    threshold = np.percentile(non_zero_energy, 10)
-                    ax2.contour(X_grid, Y_grid, energy_field, levels=[threshold], colors='white', linewidths=1.5)
-
-                im2.set_clim(np.min(np.log10(amp+1e-12)), np.max(np.log10(amp+1e-12)))
-                
-
-
-                im3.set_data(masked_h*1000.0)
-
-                im4.set_data(fr_np.reshape(N, N))
-
-                ax1.set_title(f"Step: {step} | Loss: {curr_loss:.4f}\nFreq: {curr_freq:.1f} Hz )", color='white')
-                fig.canvas.draw_idle()
-                fig.canvas.flush_events()
+                update_visualization(h_phys, w_complex, fr_np, step, curr_freq, curr_loss, phase="Train")
 
                 if step % 100 == 0:
                     step_dir = os.path.join(output_dir, f"{step}")
@@ -426,4 +500,4 @@ def main(resume_step=None,num_sources=1):
     plt.show()
 
 if __name__ == "__main__":
-    main(None,4)
+    main(None,2)

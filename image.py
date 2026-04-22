@@ -46,7 +46,7 @@ if __name__ == "__main__":
     
     plt.figure(figsize=(5, 5), facecolor='black')
 
-    target_pattern = process_target_image_smooth("pattern.png", N, sigma=1.0)
+    target_pattern = process_target_image_smooth("target.jpg", N, sigma=1.0)
     
     img_to_save = (target_pattern * 255).astype(np.uint8)
     cv2.imwrite("target_processed.jpg", img_to_save)
