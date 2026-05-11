@@ -3,8 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from parameter import PlateParams
 from direct_solver import DifferentiableDirectSolver
+from device_manager import WARP_DEVICE, init_devices
 
-wp.init()
+init_devices()
 
 def getDepth(N: int,L:float):
     
@@ -42,7 +43,7 @@ def main():
 
     
     h_np = getDepth(N,L)
-    h_wp = wp.from_numpy(h_np, device="cuda")
+    h_wp = wp.from_numpy(h_np, device=WARP_DEVICE)
     h_np = h_np.reshape((N, N)) * 1000.0 
 
     # 力
@@ -62,8 +63,8 @@ def main():
 
 
     # 绘图
-    fr = wp.from_numpy(fr_np, device="cuda")
-    fi = wp.zeros(N * N, dtype=float, device="cuda")
+    fr = wp.from_numpy(fr_np, device=WARP_DEVICE)
+    fi = wp.zeros(N * N, dtype=float, device=WARP_DEVICE)
 
     source_indices = np.where(fr_np > 0)[0]
     source_rows = source_indices // N

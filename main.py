@@ -11,8 +11,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
 import torch.nn.functional as F
 import scipy.ndimage as ndimage
+from device_manager import TORCH_DEVICE, WARP_DEVICE, init_devices, to_device
 
-wp.init()
+# 初始化设备
+init_devices()
 
 MIN_H = 0.0001
 MAX_H = 0.01
@@ -24,12 +26,10 @@ FREQ_SWEEP_INTERVAL = 200
 
 
 def compute_loss_and_adjoint_force(h_tensor, wr_np, wi_np, N, target_pattern):
+    wr = torch.from_numpy(wr_np).to(TORCH_DEVICE).float().requires_grad_(True)
+    wi = torch.from_numpy(wi_np).to(TORCH_DEVICE).float().requires_grad_(True)
 
-    wr = torch.from_numpy(wr_np).cuda().float().requires_grad_(True)
-    wi = torch.from_numpy(wi_np).cuda().float().requires_grad_(True)
-
-    target = torch.from_numpy(
-        target_pattern.copy()).cuda().float().reshape(1, 1, N, N)
+    target = torch.from_numpy(target_pattern.copy()).to(TORCH_DEVICE).float().reshape(1, 1, N, N)
 
     amp = torch.sqrt(wr**2 + wi**2+1e-12).reshape(1, 1, N, N)
     h_2d = h_tensor.reshape(1, 1, N, N)
@@ -66,10 +66,9 @@ def compute_loss_and_adjoint_force(h_tensor, wr_np, wi_np, N, target_pattern):
 
 def evaluate_total_loss_no_grad(h_tensor, wr_np, wi_np, N, target_pattern):
     with torch.no_grad():
-        wr = torch.from_numpy(wr_np).cuda().float()
-        wi = torch.from_numpy(wi_np).cuda().float()
-        target = torch.from_numpy(
-            target_pattern.copy()).cuda().float().reshape(1, 1, N, N)
+        wr = torch.from_numpy(wr_np).to(TORCH_DEVICE).float()
+        wi = torch.from_numpy(wi_np).to(TORCH_DEVICE).float()
+        target = torch.from_numpy(target_pattern.copy()).to(TORCH_DEVICE).float().reshape(1, 1, N, N)
 
         amp = torch.sqrt(wr**2 + wi**2 + 1e-12).reshape(1, 1, N, N)
         h_2d = h_tensor.reshape(1, 1, N, N)
@@ -92,11 +91,11 @@ def evaluate_total_loss_no_grad(h_tensor, wr_np, wi_np, N, target_pattern):
 
 
 def generate_gaussian_force(N, positions, sigma=0.02):
-    x = torch.linspace(0, 1, N, device="cuda")
-    y = torch.linspace(0, 1, N, device="cuda")
-    Y, X = torch.meshgrid(y, x, indexing='ij')
-
-    total_force = torch.zeros(N * N, device="cuda")
+    x = torch.linspace(0, 1, N, device=TORCH_DEVICE)
+    y = torch.linspace(0, 1, N, device=TORCH_DEVICE)
+    Y, X = torch.meshgrid(y, x, indexing='ij') 
+    
+    total_force = torch.zeros(N * N, device=TORCH_DEVICE)
 
     # dist_sq = (X - pos_normalized[0])**2 + (Y - pos_normalized[1])**2
     # force = torch.exp(-dist_sq / (2 * sigma**2))
@@ -139,21 +138,19 @@ def main(resume_step=None, num_sources=1):
     chladni_solver = DifferentiableDirectSolver(p, N, N)
 
     h_np = np.ones(N * N, dtype=np.float32) * 0.005
-
-    h_tensor = torch.full((N * N,), 0.005, device="cuda",
-                          requires_grad=True, dtype=torch.float32)
+    
+    h_tensor = torch.full((N * N,), 0.005, device=TORCH_DEVICE, requires_grad=True, dtype=torch.float32)
 
     fr_np = np.zeros(N * N, dtype=np.float32)
-    fi_wp = wp.zeros(N * N, dtype=float, device="cuda")
+    fi_wp = wp.zeros(N * N, dtype=float, device=WARP_DEVICE)
 
-    #init_positions = torch.rand((num_sources, 2), device="cuda").float()
-    init_positions = torch.tensor([[0.5, 0.5]], device="cuda").float()
+    init_positions = torch.rand((num_sources, 2), device=TORCH_DEVICE).float() 
+    # init_positions = torch.tensor([[0.5, 0.5]], device=TORCH_DEVICE).float()
+    
+    pos_tensor = init_positions.clone().detach().requires_grad_(True).float() 
 
-    pos_tensor = init_positions.clone().detach().requires_grad_(True).float()
-
-    target_freq = 1250.0
-    freq_tensor = torch.tensor(
-        [target_freq], device="cuda", requires_grad=True)
+    target_freq = 1250.0 
+    freq_tensor = torch.tensor([target_freq], device=TORCH_DEVICE, requires_grad=True)
 
     image_path = "target_processed.jpg"
     target_raw = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -247,8 +244,8 @@ def main(resume_step=None, num_sources=1):
     #             loaded_pos = data['pos']
     #             loaded_freq = data['freq']
     #             with torch.no_grad():
-    #                 pos_tensor.copy_(torch.tensor(loaded_pos, device="cuda"))
-    #                 freq_tensor.copy_(torch.tensor(loaded_freq, device="cuda"))
+    #                 pos_tensor.copy_(torch.tensor(loaded_pos, device=TORCH_DEVICE))
+    #                 freq_tensor.copy_(torch.tensor(loaded_freq, device=TORCH_DEVICE))
     #             print(f"Loaded pos: {loaded_pos}, freq: {loaded_freq}")
     #     else:
     #         print(f"Checkpoint directory {checkpoint_dir} not found. Starting from scratch.")
@@ -266,9 +263,8 @@ def main(resume_step=None, num_sources=1):
 
     #     with torch.no_grad():
     #         h_tensor.copy_(torch.from_numpy(h_np).cuda())
-
-    rho_tensor = torch.full(
-        (1, 1, N, N), 0.5, device="cuda", requires_grad=True)
+    
+    rho_tensor = torch.full((1, 1, N, N), 0.5, device=TORCH_DEVICE, requires_grad=True) 
     random_noise = np.random.rand(N * N).astype(np.float32)
  
 
@@ -282,9 +278,7 @@ def main(resume_step=None, num_sources=1):
     rho_np = smoothed_noise*0.0+0.5
 
     with torch.no_grad():
-        rho_tensor.copy_(torch.from_numpy(
-            rho_np.flatten()).cuda().view(1, 1, N, N))
-
+        rho_tensor.copy_(torch.from_numpy(rho_np.flatten()).to(TORCH_DEVICE).view(1, 1, N, N))
     def get_physical_h(rho):
         return rho * (MAX_H - MIN_H/2) + MIN_H/2
     # h_np = (smoothed_noise * (MAX_H - MIN_H) + MIN_H).flatten().astype(np.float32)
@@ -347,8 +341,8 @@ def main(resume_step=None, num_sources=1):
                 h_phys_eval = get_physical_h(h_diffused_eval)
                 force_eval = generate_gaussian_force(N, pos_tensor)
                 fr_eval_np = force_eval.detach().cpu().numpy().astype(np.float32)
-                h_eval_wp = wp.from_torch(h_phys_eval.flatten())
-                fr_eval_wp = wp.from_numpy(fr_eval_np, device="cuda")
+                h_eval_wp = wp.from_torch(h_phys_eval.flatten().cpu())
+                fr_eval_wp = wp.from_numpy(fr_eval_np, device=WARP_DEVICE)
 
                 best_freq = float(freq_tensor.item())
                 best_loss = float("inf")
@@ -379,10 +373,8 @@ def main(resume_step=None, num_sources=1):
                         best_loss = loss_eval
                         best_freq = float(f)
 
-                freq_tensor.copy_(torch.tensor(
-                    [best_freq], device="cuda", dtype=torch.float32))
-                print(
-                    f"[Freq Sweep] Step {step:04d} | Best Freq: {best_freq:.2f} Hz | Loss: {best_loss:.6f}")
+                freq_tensor.copy_(torch.tensor([best_freq], device=TORCH_DEVICE, dtype=torch.float32))
+                print(f"[Freq Sweep] Step {step:04d} | Best Freq: {best_freq:.2f} Hz | Loss: {best_loss:.6f}")
 
         curr_freq = freq_tensor.item()
         p.omega = 2.0 * np.pi * curr_freq
@@ -393,10 +385,10 @@ def main(resume_step=None, num_sources=1):
         # h_wp = wp.from_torch(h_tensor)
         h_diffused = apply_diffusion(rho_tensor, current_sigma)
         h_phys = get_physical_h(h_diffused)
-
-        h_wp = wp.from_torch(h_phys.flatten())
-        fr_wp = wp.from_numpy(fr_np.astype(np.float32), device="cuda")
-
+        
+        h_wp = wp.from_torch(h_phys.flatten().cpu())
+        fr_wp = wp.from_numpy(fr_np.astype(np.float32), device=WARP_DEVICE)
+        
         try:
             w_complex = chladni_solver.solve(h_wp, fr_wp, fi_wp)
             wr_np, wi_np = w_complex.real, w_complex.imag
@@ -404,9 +396,8 @@ def main(resume_step=None, num_sources=1):
             curr_loss, g_wr, g_wi, l1, l2, l3 = compute_loss_and_adjoint_force(
                 h_phys, wr_np, wi_np, N, target_pattern
             )
-
-            l4 = (100.0)*void_protection_loss(h_phys,
-                                            torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N))
+            
+            l4 = (1.0)*void_protection_loss(h_phys,torch.from_numpy(target_pattern.copy()).to(TORCH_DEVICE).float().reshape(1, 1, N, N))
             # l4.backward()
             (l4).backward(retain_graph=True)
 
@@ -414,10 +405,8 @@ def main(resume_step=None, num_sources=1):
 
             grad_w_complex = g_wr + 1j * g_wi
 
-            grad_h, grad_fr_np, grad_omega = chladni_solver.compute_adjoint_gradient(
-                h_wp, w_complex, grad_w_complex)
-            gh_torch = torch.from_numpy(
-                grad_h).cuda().float().reshape(1, 1, N, N)
+            grad_h, grad_fr_np, grad_omega = chladni_solver.compute_adjoint_gradient(h_wp, w_complex, grad_w_complex)
+            gh_torch = torch.from_numpy(grad_h).to(TORCH_DEVICE).float().reshape(1, 1, N, N)
             # target_mask = torch.from_numpy(target_pattern).cuda().float().reshape(N, N)
             # active_protection_mask = (target_mask < 0.5) & (gh_torch > 0)
             # gh_torch[active_protection_mask] = 0.0
@@ -432,11 +421,9 @@ def main(resume_step=None, num_sources=1):
 
             with torch.no_grad():
                 if step < 10000:
-                    low_res_size = 6
-                    low_res_noise = torch.randn(
-                        1, 1, low_res_size, low_res_size, device="cuda")
-                    g_noise = F.interpolate(low_res_noise, size=(
-                        N, N), mode='bicubic', align_corners=False)
+                    low_res_size = 6 
+                    low_res_noise = torch.randn(1, 1, low_res_size, low_res_size, device=TORCH_DEVICE)
+                    g_noise = F.interpolate(low_res_noise, size=(N, N), mode='bicubic', align_corners=False)
                     current_grad_mag = rho_tensor.grad.abs().mean()
                     noise_strength = (0.1 + current_grad_mag) * \
                         1 * (1 - step / 10000)
@@ -455,12 +442,11 @@ def main(resume_step=None, num_sources=1):
             # h_np = np.clip(h_np, 0.000, 0.010)
 
             # 位置和频率
-            grad_fr_tensor = torch.from_numpy(grad_fr_np).cuda().float()
+            grad_fr_tensor = torch.from_numpy(grad_fr_np).to(TORCH_DEVICE).float()
             force_tensor.backward(grad_fr_tensor)
-
+        
             # 频率梯度: dL/dfreq = dL/domega * (2*pi)
-            freq_tensor.grad = torch.tensor(
-                [grad_omega * 2.0 * np.pi], device="cuda", dtype=torch.float32)
+            freq_tensor.grad = torch.tensor([grad_omega * 2.0 * np.pi], device=TORCH_DEVICE,dtype=torch.float32)
 
             # scheduler.step(curr_loss)
             optimizer.step()
@@ -469,16 +455,13 @@ def main(resume_step=None, num_sources=1):
                 pos_tensor.clamp_(0.05, 0.95)
                 freq_tensor.clamp_(FREQ_MIN, FREQ_MAX)
 
-                if step % 5 == 0:
-                    low_res_size = 8
-                    low_res_noise = torch.randn(
-                        1, 1, low_res_size, low_res_size, device="cuda")
-                    continuous_noise = F.interpolate(low_res_noise, size=(
-                        N, N), mode='bicubic', align_corners=False)
-                    noise_strength = 0.1 * (1 - step / 10000)
-                    rho_tensor.add_(continuous_noise.view(
-                        1, 1, N, N) * noise_strength)
-
+                if step % 20 == 0:
+                    low_res_size = 8 
+                    low_res_noise = torch.randn(1, 1, low_res_size, low_res_size, device=TORCH_DEVICE)
+                    continuous_noise = F.interpolate(low_res_noise, size=(N, N), mode='bicubic', align_corners=False)
+                    noise_strength = 0.5* (1 - step / 10000) 
+                    rho_tensor.add_(continuous_noise.view(1, 1, N, N) * noise_strength)
+              
                 rho_tensor.clamp_(0, 1)
                 # h_tensor.clamp_(MIN_H/2, MAX_H)
                 # h_np = h_tensor.cpu().numpy()

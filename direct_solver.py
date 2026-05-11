@@ -4,6 +4,7 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
 from parameter import PlateParams
+from device_manager import WARP_DEVICE
 
 @wp.kernel
 def assemble_stiffness_hessian_kernel(
@@ -257,7 +258,7 @@ class DifferentiableDirectSolver:
             dim=self.n,
             inputs=[h_wp, self.params, self.nx, self.ny, 
                     self.rows, self.cols, self.vals_r, self.vals_i],
-            device="cuda"
+            device=WARP_DEVICE
         )
         wp.synchronize()
 
@@ -312,17 +313,17 @@ class DifferentiableDirectSolver:
         # 这里采用：K * lambda = conj(grad_w)
         lam_complex = self.solve_adjoint(grad_w_complex)
         
-        wr_wp = wp.from_numpy(w_complex.real.astype(np.float32), device="cuda")
-        wi_wp = wp.from_numpy(w_complex.imag.astype(np.float32), device="cuda")
-        lr_wp = wp.from_numpy(lam_complex.real.astype(np.float32), device="cuda")
-        li_wp = wp.from_numpy(lam_complex.imag.astype(np.float32), device="cuda")
-        grad_h_wp = wp.zeros(self.n, dtype=float, device="cuda")
+        wr_wp = wp.from_numpy(w_complex.real.astype(np.float32), device=WARP_DEVICE)
+        wi_wp = wp.from_numpy(w_complex.imag.astype(np.float32), device=WARP_DEVICE)
+        lr_wp = wp.from_numpy(lam_complex.real.astype(np.float32), device=WARP_DEVICE)
+        li_wp = wp.from_numpy(lam_complex.imag.astype(np.float32), device=WARP_DEVICE)
+        grad_h_wp = wp.zeros(self.n, dtype=float, device=WARP_DEVICE)
 
         wp.launch(
             kernel=compute_grad_h_kernel,
             dim=self.n,
             inputs=[h_wp, wr_wp, wi_wp, lr_wp, li_wp, self.params, self.nx, self.ny, grad_h_wp],
-            device="cuda"
+            device=WARP_DEVICE
         )
         
         grad_fr_np = np.real(lam_complex).astype(np.float32)
@@ -407,7 +408,7 @@ class DirectSolver:
             dim=self.n,
             inputs=[h_wp, self.params, self.nx, self.ny, 
                     self.rows, self.cols, self.vals_r, self.vals_i],
-            device="cuda"
+            device=WARP_DEVICE
         )
         wp.synchronize()
 
@@ -434,5 +435,5 @@ class DirectSolver:
 
         w_complex = spla.spsolve(A_sparse, f_complex)
         
-        return wp.from_numpy(w_complex.real.astype(np.float32), device="cuda"), \
-               wp.from_numpy(w_complex.imag.astype(np.float32), device="cuda")
+        return wp.from_numpy(w_complex.real.astype(np.float32), device=WARP_DEVICE), \
+               wp.from_numpy(w_complex.imag.astype(np.float32), device=WARP_DEVICE)
