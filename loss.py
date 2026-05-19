@@ -10,31 +10,26 @@ def ssim_loss(display_pattern, target_pattern):
     display_pattern = display_pattern / max
     similarity_index = ssim(display_pattern, target_pattern, data_range=1.0)
 
-    return 1.0 - similarity_index
+    return (1.0 - similarity_index)*10
 
 
 def physics_informed_loss(energy_field, target_pattern):
-    # max_energy = torch.max(energy_field)
-    # energy_field = energy_field / (max_energy + 1e-8)
-    # energy_on_target = torch.sum(energy_field * target_pattern)
+    max_energy = torch.max(energy_field)
+    energy_field = energy_field / (max_energy + 1e-8)
+    energy_on_target = torch.sum(energy_field * target_pattern)
 
-    # energy_off_target = torch.sum(energy_field * (1.0 - target_pattern))
+    energy_off_target = torch.sum(energy_field * (1.0 - target_pattern))
 
-    # loss = energy_on_target / (energy_off_target + 1e-8)
-    eps = 1e-6
+    loss = energy_on_target / (energy_off_target + 1e-8)
+  
 
-    avg_energy = torch.mean(energy_field) + 1e-12
-    norm_energy = energy_field / avg_energy
+    # nodes_mask = (target_pattern > 0.5).float()
+    # antinodes_mask = 1.0 - nodes_mask
 
-    nodes_energy = torch.sum(norm_energy * target_pattern) / \
-        (torch.sum(target_pattern) + 1e-8)
-
-    anti_nodes_energy = torch.sum(
-        norm_energy * (1.0 - target_pattern)) / (torch.sum(1.0 - target_pattern) + 1e-8)
-
-    # loss = torch.log(nodes_energy + eps) - torch.log(anti_nodes_energy + eps)
-
-    loss = nodes_energy / (anti_nodes_energy + 1e-8)
+    # antinode_energy_avg = torch.sum(
+    #     energy_field * antinodes_mask) / (torch.sum(antinodes_mask) + 1e-8)
+    
+    # loss = 1.0 / (antinode_energy_avg + 1e-8)
 
     # avg_energy = torch.mean(energy_field) + 1e-8
     # norm_energy = energy_field / avg_energy
@@ -45,36 +40,51 @@ def physics_informed_loss(energy_field, target_pattern):
 
 def quantile_physics_loss(energy_field, target_pattern, q=0.10):
 
-    with torch.no_grad():
-        flat_energy = energy_field.reshape(-1)
-        k = int(q * flat_energy.numel())
-        threshold, _ = torch.kthvalue(flat_energy, k)
+    # with torch.no_grad():
+    #     flat_energy = energy_field.reshape(-1)
+    #     k = int(q * flat_energy.numel())
+    #     threshold, _ = torch.kthvalue(flat_energy, k)
 
-        threshold = torch.clamp(threshold, min=1e-12)
+    #     threshold = torch.clamp(threshold, min=1e-12)
 
-    norm_energy = energy_field / threshold
+    # norm_energy = energy_field / threshold
 
-    loss_on_target = torch.mean(torch.relu(norm_energy) * target_pattern)
+    # loss_on_target = torch.mean(torch.relu(norm_energy) * target_pattern)
 
-    loss_off_target = torch.mean(torch.relu(
-        1.0-norm_energy) * (1.0 - target_pattern))
+    # loss_off_target = torch.mean(torch.relu(
+    #     1.0-norm_energy) * (1.0 - target_pattern))
 
-    return loss_on_target + 0.1 * loss_off_target
+    nodes_mask = (target_pattern > 0.5).float()
+    antinodes_mask = 1.0 - nodes_mask
+
+
+    node_energy_avg = torch.sum(
+        energy_field * nodes_mask) / (torch.sum(nodes_mask) + 1e-8)
+
+    antinode_energy_avg = torch.sum(
+        energy_field * antinodes_mask) / (torch.sum(antinodes_mask) + 1e-8)
+
+    loss2 = 1.0 / (antinode_energy_avg + 1e-8)
+    return (node_energy_avg + loss2)
 
 
 def void_protection_loss(h_tensor, target_pattern, safe_h=0.0002):
 
     h_2d = h_tensor.reshape(target_pattern.shape)
 
-    eps = 1e-5
-    inv_h = 1.0 / (h_2d + eps)
-    inv_safe = 1.0 / safe_h
-    violation = torch.relu(inv_h - inv_safe)
+    # eps = 1e-5
+    # inv_h = 1.0 / (h_2d + eps)
+    # inv_safe = 1.0 / safe_h
+    # violation = torch.relu(inv_h - inv_safe)
 
-    # mask = (target_pattern > 0.5).int()/
+    # # mask = (target_pattern > 0.5).int()/
 
-    penalty = (violation * target_pattern)*target_pattern
-    return torch.mean(penalty)
+    # penalty = (violation * target_pattern)*target_pattern
+
+    gap = torch.relu(safe_h - h_2d)
+    penalty = (gap**2.0) * target_pattern
+
+    return torch.mean(penalty * 1e7)
 
 
 def lpips_loss(display_pattern, target_pattern, loss_model=lpips.LPIPS(net='vgg').cuda()):

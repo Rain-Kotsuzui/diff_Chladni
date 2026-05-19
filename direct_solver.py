@@ -227,6 +227,11 @@ def compute_grad_h_kernel(
 
     grad_h[idx] = -sum_val
 
+
+import torch
+import warp as wp
+
+
 class DifferentiableDirectSolver:
     def __init__(self, params, nx, ny):
         self.params = params
@@ -334,6 +339,48 @@ class DifferentiableDirectSolver:
 
         return grad_h_wp.numpy(), grad_fr_np, grad_omega
 
+
+
+class ChladniSolverFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, h_phys_tensor, fr_tensor, omega_tensor, solver, p, fi_wp):
+        h_wp = wp.from_torch(h_phys_tensor.contiguous().flatten())
+        fr_wp = wp.from_torch(fr_tensor.contiguous().flatten())
+
+        p.omega = omega_tensor.item()
+        
+        w_complex = solver.solve(h_wp, fr_wp, fi_wp)
+        
+        ctx.solver = solver
+        ctx.w_complex = w_complex
+        ctx.h_wp = h_wp
+        ctx.N = h_phys_tensor.shape[-1]
+        
+        wr = torch.from_numpy(w_complex.real).cuda().float().reshape(h_phys_tensor.shape)
+        wi = torch.from_numpy(w_complex.imag).cuda().float().reshape(h_phys_tensor.shape)
+        
+        return wr, wi
+
+    @staticmethod
+    def backward(ctx, grad_wr, grad_wi):
+        solver = ctx.solver
+        w_complex = ctx.w_complex
+        h_wp = ctx.h_wp
+        N = ctx.N
+
+        grad_w_complex = (grad_wr.cpu().numpy() + 1j * grad_wi.cpu().numpy()).flatten()
+
+        grad_h_np, grad_fr_np, grad_omega = solver.compute_adjoint_gradient(
+            h_wp, w_complex, grad_w_complex
+        )
+
+        grad_h_tensor = torch.from_numpy(grad_h_np).cuda().float().reshape(1, 1, N, N)
+        grad_fr_tensor = torch.from_numpy(grad_fr_np).cuda().float().reshape(1, 1, N, N)
+        grad_omega_tensor = torch.tensor([grad_omega], device="cuda", dtype=torch.float32)
+
+        return grad_h_tensor, grad_fr_tensor, grad_omega_tensor, None, None, None
+    
+    
 
 
 class DirectSolver:
