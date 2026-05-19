@@ -425,7 +425,7 @@ def main(resume_step=None, num_sources=1):
             # gh_smooth = torch.nn.functional.avg_pool2d(gh_torch, kernel_size=3, stride=1, padding=1)
             # gh_phys_final = gh_smooth / (torch.abs(gh_smooth).max() + 1e-10)
 
-            gh_torch = gh_torch / (gh_torch.norm() + 1e-8)
+            # gh_torch = gh_torch / (gh_torch.norm() + 1e-8)
 
             # h_phys.grad =gh_phys_final.flatten()+grad_protect
             h_phys.backward(gradient=gh_torch *0.5)

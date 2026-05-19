@@ -34,25 +34,17 @@ class DifferentiableAgent(nn.Module):
         # Critic 输出状态价值 V(s)
         self.critic = nn.Linear(512, 1)
 
-    def forward(self, obs, deterministic=False):
+    def forward(self, obs,  external_std=0.1,deterministic=False):
         features = self.cnn(obs)
         shared = self.shared_net(features)
-
         value = self.critic(shared)
-
-        # 限制均值在 [-1, 1]
         action_mean = torch.tanh(self.actor_mean(shared))
-        # action_std = torch.exp(self.actor_log_std).expand_as(action_mean)
-
-        log_std = torch.clamp(self.actor_log_std, min=-20, max=2)
-        action_std = torch.exp(log_std).expand_as(action_mean)
-        dist = Normal(action_mean, action_std)
-        
 
         if deterministic:
             action = action_mean
         else:
-            # 关键：rsample() 允许梯度穿过采样过程流回网络权重！(重参数化技巧)
+            action_std = torch.full_like(action_mean, external_std)
+            dist = Normal(action_mean, action_std)
             action = dist.rsample()
 
         return action.squeeze(0), value.squeeze(-1)
@@ -177,7 +169,8 @@ def main():
     render_freq = 1
 
     print("开始可微强化学习 (SHAC) 训练...")
-    
+
+    current_std = 0.5
     for episode in range(10000):
         # 回合开始，真正地重置环境 (变回平坦的板子)
         obs = env.reset()
@@ -197,7 +190,7 @@ def main():
                 total_steps += 1
                 step_in_ep += 1
                 
-                action, value = agent(obs)
+                action, value = agent(obs,external_std=current_std)
                 next_obs, reward, current_loss, infos = env.step(action)
                 
                 rewards.append(reward)
@@ -219,9 +212,10 @@ def main():
             
             for i in reversed(range(current_horizon)):
                 discounted_return = rewards[i] + gamma * discounted_return
-                actor_loss -= discounted_return 
                 critic_loss += F.mse_loss(values[i], discounted_return.detach())
-
+                if i == 0:
+                    R_0 = discounted_return
+            actor_loss = -R_0
             loss = (actor_loss + 0.5 * critic_loss) / current_horizon
 
             # ==========================================
@@ -253,7 +247,8 @@ def main():
             obs = obs.detach()
             # 剥离环境内部状态的计算图
             env.detach_state() 
-
+        
+        current_std = max(0.05, current_std * 0.995)
         # --- 一个回合 (200步) 结束 ---
         if episode % 10 == 0:
             print(f"Ep: {episode} | PhysLoss: {current_loss.item():.4f} | Freq: {env.force_freq.item():.1f}Hz")
