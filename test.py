@@ -1,14 +1,16 @@
 import warp as wp
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
 from parameter import PlateParams
 from direct_solver import DifferentiableDirectSolver
+from device_manager import WARP_DEVICE, init_devices
 
-wp.init()
+init_devices()
 
 def getDepth(N: int,L:float):
     
-    h_np = np.ones(N * N, dtype=np.float32) * 0.001
+    h_np = np.ones(N * N, dtype=np.float32) * 0.0008  # 0.8mm
     for i in range(N):
         for j in range(N):
             idx = i * N + j
@@ -22,27 +24,35 @@ def getDepth(N: int,L:float):
     return h_np
 
 def main():
-    N = 128       
-    L = 0.3         # 30cm
+    parser = argparse.ArgumentParser(description='Chladni Pattern Simulator')
+    parser.add_argument('--freq', type=float, default=750.0, help='Frequency in Hz (default: 750)')
+    parser.add_argument('--N', type=int, default=128, help='Grid resolution (default: 128)')
+    parser.add_argument('--L', type=float, default=0.2, help='Plate size in meters (default: 0.2)')
+    parser.add_argument('--thickness', type=float, default=0.0008, help='Plate thickness in meters (default: 0.0008)')
+    parser.add_argument('--E', type=float, default=70e9, help="Young's modulus in Pa (default: 70e9)")
+    parser.add_argument('--rho', type=float, default=2700.0, help='Density in kg/m³ (default: 2700)')
+    parser.add_argument('--nu', type=float, default=0.33, help="Poisson's ratio (default: 0.33)")
+    parser.add_argument('--eta', type=float, default=1e-4, help='Damping coefficient (default: 1e-4)')
+    args = parser.parse_args()
+    
+    N = args.N
+    L = args.L
     
     p = PlateParams()
-    p.E = 70.0e9     
-    p.nu = 0.33      
-    p.rho = 2700.0   
-    p.dx = L / N     
-    p.dy = L / N     
-    p.eta = 1e-4    # 阻尼
+    p.E = args.E
+    p.nu = args.nu
+    p.rho = args.rho
+    p.dx = L / N
+    p.dy = L / N
+    p.eta = args.eta
 
     chladni_solver = DifferentiableDirectSolver(p, N, N)
 
-    start_f = 500.0   
-    end_f = 2000.0
-    steps = 200      
-    freqs = np.linspace(start_f, end_f, steps)
-
+    target_f = args.freq
+    freqs = [target_f]
     
     h_np = getDepth(N,L)
-    h_wp = wp.from_numpy(h_np, device="cuda")
+    h_wp = wp.from_numpy(h_np, device=WARP_DEVICE)
     h_np = h_np.reshape((N, N)) * 1000.0 
 
     # 力
@@ -62,8 +72,8 @@ def main():
 
 
     # 绘图
-    fr = wp.from_numpy(fr_np, device="cuda")
-    fi = wp.zeros(N * N, dtype=float, device="cuda")
+    fr = wp.from_numpy(fr_np, device=WARP_DEVICE)
+    fi = wp.zeros(N * N, dtype=float, device=WARP_DEVICE)
 
     source_indices = np.where(fr_np > 0)[0]
     source_rows = source_indices // N

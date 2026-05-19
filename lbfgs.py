@@ -11,15 +11,16 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
 
 import scipy.ndimage as ndimage
+from device_manager import TORCH_DEVICE, WARP_DEVICE, init_devices
 
-wp.init()
+init_devices()
 
 def compute_loss_and_adjoint_force(wr_np, wi_np, N, target_pattern):
  
-    wr = torch.from_numpy(wr_np).cuda().float().requires_grad_(True)
-    wi = torch.from_numpy(wi_np).cuda().float().requires_grad_(True)
+    wr = torch.from_numpy(wr_np).to(TORCH_DEVICE).float().requires_grad_(True)
+    wi = torch.from_numpy(wi_np).to(TORCH_DEVICE).float().requires_grad_(True)
     
-    target = torch.from_numpy(target_pattern.copy()).cuda().float().reshape(1, 1, N, N)
+    target = torch.from_numpy(target_pattern.copy()).to(TORCH_DEVICE).float().reshape(1, 1, N, N)
 
     amp = torch.sqrt(wr**2 + wi**2 + 1e-12).reshape(1, 1, N, N)
     
@@ -47,11 +48,11 @@ def compute_loss_and_adjoint_force(wr_np, wi_np, N, target_pattern):
     return total_loss.item(), wr.grad.cpu().numpy(), wi.grad.cpu().numpy(), l1.item(),l2.item()*10.0, 2.0*l3.mean().item()
 
 def generate_gaussian_force(N, positions, sigma=0.02):
-    x = torch.linspace(0, 1, N, device="cuda")
-    y = torch.linspace(0, 1, N, device="cuda")
+    x = torch.linspace(0, 1, N, device=TORCH_DEVICE)
+    y = torch.linspace(0, 1, N, device=TORCH_DEVICE)
     Y, X = torch.meshgrid(y, x, indexing='ij') 
     
-    total_force = torch.zeros(N * N, device="cuda")
+    total_force = torch.zeros(N * N, device=TORCH_DEVICE)
 
     # dist_sq = (X - pos_normalized[0])**2 + (Y - pos_normalized[1])**2
     # force = torch.exp(-dist_sq / (2 * sigma**2))
@@ -78,19 +79,19 @@ def main(resume_step=None,num_sources=1):
 
     h_np = np.ones(N * N, dtype=np.float32) * 0.005
     
-    h_tensor = torch.full((N * N,), 0.005, device="cuda", requires_grad=True, dtype=torch.float32)
+    h_tensor = torch.full((N * N,), 0.005, device=TORCH_DEVICE, requires_grad=True, dtype=torch.float32)
 
     fr_np = np.zeros(N * N, dtype=np.float32)
-    fi_wp = wp.zeros(N * N, dtype=float, device="cuda")
+    fi_wp = wp.zeros(N * N, dtype=float, device=TORCH_DEVICE)
 
 
-    # init_positions = torch.rand((num_sources, 2), device="cuda").float() 
-    init_positions = torch.tensor([[0.5, 0.5]], device="cuda").float()
+    # init_positions = torch.rand((num_sources, 2), device=TORCH_DEVICE).float() 
+    init_positions = torch.tensor([[0.5, 0.5]], device=TORCH_DEVICE).float()
     
     pos_tensor = init_positions.clone().detach().requires_grad_(True).float() 
 
     target_freq = 1250.0 
-    freq_tensor = torch.tensor([target_freq], device="cuda", requires_grad=True)
+    freq_tensor = torch.tensor([target_freq], device=TORCH_DEVICE, requires_grad=True)
     
     
     optimizer = optim.LBFGS([h_tensor, pos_tensor, freq_tensor], 
@@ -117,7 +118,7 @@ def main(resume_step=None,num_sources=1):
         # 这里的 force_tensor 需要在 closure 内计算以便 autograd 记录
         force_tensor = generate_gaussian_force(N, pos_tensor)
         curr_fr_np = force_tensor.detach().cpu().numpy()
-        fr_wp = wp.from_numpy(curr_fr_np.astype(np.float32), device="cuda")
+        fr_wp = wp.from_numpy(curr_fr_np.astype(np.float32), device=TORCH_DEVICE)
     
         # 求解
         w_c = chladni_solver.solve(h_wp, fr_wp, fi_wp)
@@ -133,13 +134,13 @@ def main(resume_step=None,num_sources=1):
         )
     
         # 填充梯度
-        gh_torch = torch.from_numpy(grad_h).cuda().float().reshape(1,1,N,N)
+        gh_torch = torch.from_numpy(grad_h).to(TORCH_DEVICE).float().reshape(1,1,N,N)
         gh_smooth = torch.nn.functional.avg_pool2d(gh_torch, 3, 1, 1)
         h_tensor.grad = gh_smooth.flatten()
         
         # 力和频率的梯度
-        force_tensor.backward(torch.from_numpy(grad_fr_np).cuda())
-        freq_tensor.grad = torch.tensor([grad_omega * 2.0 * np.pi], device="cuda", dtype=torch.float32)
+        force_tensor.backward(torch.from_numpy(grad_fr_np).to(TORCH_DEVICE))
+        freq_tensor.grad = torch.tensor([grad_omega * 2.0 * np.pi], device=TORCH_DEVICE, dtype=torch.float32)
         
         # --- 将内部变量传出到外部 state 字典 ---
         state['loss'] = loss_val
@@ -155,7 +156,7 @@ def main(resume_step=None,num_sources=1):
     # idx_center = (N // 2) * N + (N // 2)
 
     # fr_np[idx_center] = 1.0 
-    # fr_wp = wp.from_numpy(fr_np, device="cuda")
+    # fr_wp = wp.from_numpy(fr_np, device=TORCH_DEVICE)
 
 
     image_path = "target_processed.jpg"
@@ -229,7 +230,7 @@ def main(resume_step=None,num_sources=1):
             if os.path.exists(h_path):
                 h_np = np.load(h_path).flatten().astype(np.float32)
                 with torch.no_grad():
-                    h_tensor.copy_(torch.from_numpy(h_np).cuda())
+                    h_tensor.copy_(torch.from_numpy(h_np).to(TORCH_DEVICE))
                 print(f"Loaded h from {h_path}")
             
             force_path = os.path.join(checkpoint_dir, "force.npz")
@@ -238,8 +239,8 @@ def main(resume_step=None,num_sources=1):
                 loaded_pos = data['pos']
                 loaded_freq = data['freq']
                 with torch.no_grad():
-                    pos_tensor.copy_(torch.tensor(loaded_pos, device="cuda"))
-                    freq_tensor.copy_(torch.tensor(loaded_freq, device="cuda"))
+                    pos_tensor.copy_(torch.tensor(loaded_pos, device=TORCH_DEVICE))
+                    freq_tensor.copy_(torch.tensor(loaded_freq, device=TORCH_DEVICE))
                 print(f"Loaded pos: {loaded_pos}, freq: {loaded_freq}")
         else:
             print(f"Checkpoint directory {checkpoint_dir} not found. Starting from scratch.")

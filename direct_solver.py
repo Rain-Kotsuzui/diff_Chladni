@@ -4,6 +4,7 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
 from parameter import PlateParams
+from device_manager import WARP_DEVICE
 
 @wp.kernel
 def assemble_stiffness_hessian_kernel(
@@ -246,6 +247,18 @@ class DifferentiableDirectSolver:
         
         self.last_A = None # 缓存矩阵用于反向传播
 
+    def resize(self, nx, ny):
+        """重新分配数组以适应新的网格尺寸"""
+        if self.nx == nx and self.ny == ny:
+            return
+        self.nx, self.ny = nx, ny
+        self.n = nx * ny
+        self.rows = wp.zeros(self.n * self.entries_per_node, dtype=int)
+        self.cols = wp.zeros(self.n * self.entries_per_node, dtype=int)
+        self.vals_r = wp.zeros(self.n * self.entries_per_node, dtype=float)
+        self.vals_i = wp.zeros(self.n * self.entries_per_node, dtype=float)
+        self.last_A = None
+
     def solve(self, h_wp, fr_wp, fi_wp):
         self.rows.fill_(-1)
         self.cols.fill_(-1)
@@ -257,7 +270,7 @@ class DifferentiableDirectSolver:
             dim=self.n,
             inputs=[h_wp, self.params, self.nx, self.ny, 
                     self.rows, self.cols, self.vals_r, self.vals_i],
-            device="cuda"
+            device=WARP_DEVICE
         )
         wp.synchronize()
 
@@ -312,17 +325,17 @@ class DifferentiableDirectSolver:
         # 这里采用：K * lambda = conj(grad_w)
         lam_complex = self.solve_adjoint(grad_w_complex)
         
-        wr_wp = wp.from_numpy(w_complex.real.astype(np.float32), device="cuda")
-        wi_wp = wp.from_numpy(w_complex.imag.astype(np.float32), device="cuda")
-        lr_wp = wp.from_numpy(lam_complex.real.astype(np.float32), device="cuda")
-        li_wp = wp.from_numpy(lam_complex.imag.astype(np.float32), device="cuda")
-        grad_h_wp = wp.zeros(self.n, dtype=float, device="cuda")
+        wr_wp = wp.from_numpy(w_complex.real.astype(np.float32), device=WARP_DEVICE)
+        wi_wp = wp.from_numpy(w_complex.imag.astype(np.float32), device=WARP_DEVICE)
+        lr_wp = wp.from_numpy(lam_complex.real.astype(np.float32), device=WARP_DEVICE)
+        li_wp = wp.from_numpy(lam_complex.imag.astype(np.float32), device=WARP_DEVICE)
+        grad_h_wp = wp.zeros(self.n, dtype=float, device=WARP_DEVICE)
 
         wp.launch(
             kernel=compute_grad_h_kernel,
             dim=self.n,
             inputs=[h_wp, wr_wp, wi_wp, lr_wp, li_wp, self.params, self.nx, self.ny, grad_h_wp],
-            device="cuda"
+            device=WARP_DEVICE
         )
         
         grad_fr_np = np.real(lam_complex).astype(np.float32)
@@ -396,6 +409,17 @@ class DirectSolver:
         self.vals_r = wp.zeros(self.n * self.entries_per_node, dtype=float)
         self.vals_i = wp.zeros(self.n * self.entries_per_node, dtype=float)
 
+    def resize(self, nx, ny):
+        """重新分配数组以适应新的网格尺寸"""
+        if self.nx == nx and self.ny == ny:
+            return
+        self.nx, self.ny = nx, ny
+        self.n = nx * ny
+        self.rows = wp.zeros(self.n * self.entries_per_node, dtype=int)
+        self.cols = wp.zeros(self.n * self.entries_per_node, dtype=int)
+        self.vals_r = wp.zeros(self.n * self.entries_per_node, dtype=float)
+        self.vals_i = wp.zeros(self.n * self.entries_per_node, dtype=float)
+
     def solve(self, h_wp, fr_wp, fi_wp):
         self.rows.fill_(-1)
         self.cols.fill_(-1)
@@ -407,7 +431,7 @@ class DirectSolver:
             dim=self.n,
             inputs=[h_wp, self.params, self.nx, self.ny, 
                     self.rows, self.cols, self.vals_r, self.vals_i],
-            device="cuda"
+            device=WARP_DEVICE
         )
         wp.synchronize()
 
@@ -434,5 +458,5 @@ class DirectSolver:
 
         w_complex = spla.spsolve(A_sparse, f_complex)
         
-        return wp.from_numpy(w_complex.real.astype(np.float32), device="cuda"), \
-               wp.from_numpy(w_complex.imag.astype(np.float32), device="cuda")
+        return wp.from_numpy(w_complex.real.astype(np.float32), device=WARP_DEVICE), \
+               wp.from_numpy(w_complex.imag.astype(np.float32), device=WARP_DEVICE)

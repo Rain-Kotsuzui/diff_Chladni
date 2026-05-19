@@ -2,6 +2,7 @@ import torch
 import lpips
 from torchmetrics.functional import structural_similarity_index_measure as ssim
 import numpy as np
+from device_manager import TORCH_DEVICE
 
 
 def ssim_loss(display_pattern, target_pattern):
@@ -87,7 +88,9 @@ def void_protection_loss(h_tensor, target_pattern, safe_h=0.0002):
     return torch.mean(penalty * 1e7)
 
 
-def lpips_loss(display_pattern, target_pattern, loss_model=lpips.LPIPS(net='vgg').cuda()):
+def lpips_loss(display_pattern, target_pattern, loss_model=None):
+    if loss_model is None:
+        loss_model = lpips.LPIPS(net='vgg').to(TORCH_DEVICE)
 
     max = torch.max(display_pattern)
     display_pattern = display_pattern / max
