@@ -118,7 +118,12 @@ def main(resume_step=None, num_sources=1):
 
     # 定义无界的可学习参数 (依靠 sigmoid 映射到物理界限，防截断)
     raw_rho = nn.Parameter(torch.zeros(1, 1, N, N, device="cuda")) # sigmoid(0) = 0.5 初始厚度
-    raw_pos = nn.Parameter(torch.zeros(1, 2, device="cuda"))       # 初始位置中心
+    if num_sources > 1:
+        init_pos = torch.randn(num_sources, 2, device="cuda") * 1.0
+    else:
+        init_pos = torch.zeros(1, 2, device="cuda")
+    raw_pos = nn.Parameter(init_pos) 
+
 
     optimizer = optim.Adam([
         {'params': [raw_rho], 'lr': 0.1},
@@ -314,4 +319,4 @@ def main(resume_step=None, num_sources=1):
     plt.show()
 
 if __name__ == "__main__":
-    main(None, 1)
+    main(None, 2)
