@@ -24,23 +24,23 @@ def process_target_image_smooth(image_path: str, N: int, sigma: float = 3.0) -> 
 if __name__ == "__main__":
     N = 64
     
-    # img_test = np.ones((N, N), dtype=np.uint8) * 0
-    # font = cv2.FONT_HERSHEY_SIMPLEX
-    # text = "S"
-    # font_scale = 2  # 足够大的字号
-    # thickness = 2   # 增加厚度，防止在 64x64 分辨率下丢失
+    img_test = np.ones((N, N), dtype=np.uint8) * 0
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    text = "S"
+    font_scale = 2  # 足够大的字号
+    thickness = 2   # 增加厚度，防止在 64x64 分辨率下丢失
     
-    # # 3. 计算文字大小以便居中
-    # text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
-    # text_x = (N - text_size[0]) // 2
-    # text_y = (N + text_size[1]) // 2 # 注意 y 坐标在 OpenCV 里是基线
+    # 3. 计算文字大小以便居中
+    text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+    text_x = (N - text_size[0]) // 2
+    text_y = (N + text_size[1]) // 2 # 注意 y 坐标在 OpenCV 里是基线
     
-    # # 4. 在图上绘制黑色字母 S (0, 0, 0)
-    # cv2.putText(img_test, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
+    # 4. 在图上绘制黑色字母 S (0, 0, 0)
+    cv2.putText(img_test, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
 
-    img_test = np.ones((500, 500), dtype=np.uint8) *0
+    # img_test = np.ones((500, 500), dtype=np.uint8) *0
     # cv2.circle(img_test, (250, 250), 150, 255, 40) 
-    cv2.line(img_test, (250, 0), (250, 500), 255, 40)
+    # cv2.line(img_test, (100, 0), (400, 500), 255, 40)
     
     cv2.imwrite("target.jpg", img_test)
 

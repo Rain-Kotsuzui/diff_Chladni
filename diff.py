@@ -16,9 +16,6 @@ from loss import ssim_loss, lpips_loss, physics_informed_loss, void_protection_l
 
 wp.init()
 
-# ==========================================
-# 物理超参数与训练设置
-# ==========================================
 MIN_H = 0.0001
 MAX_H = 0.01
 max_steps = 100000
@@ -29,25 +26,19 @@ FREQ_SWEEP_INTERVAL = 200
 N = 64
 L = 0.3
 
-# ==========================================
-# 核心 1：封装正规的 PyTorch 自动求导算子
-# ==========================================
 class ChladniSolverFunction(torch.autograd.Function):
     @staticmethod
     def forward(ctx, h_phys, force, omega, solver, p, fi_wp):
-        # 1. 转换数据
+
         h_wp = wp.from_torch(h_phys.flatten().contiguous())
         f_wp = wp.from_torch(force.flatten().contiguous())
         p.omega = float(omega.item())
 
-        # 2. 正向求解
         w_complex = solver.solve(h_wp, f_wp, fi_wp)
         
-        # 将复数结果转为实部和虚部的 PyTorch Tensor，保留空间结构
         wr = torch.from_numpy(w_complex.real).cuda().float().reshape(1, 1, N, N)
         wi = torch.from_numpy(w_complex.imag).cuda().float().reshape(1, 1, N, N)
 
-        # 3. 保存供 backward 使用的 Context
         ctx.solver = solver
         ctx.h_wp = h_wp
         ctx.w_complex = w_complex
@@ -60,10 +51,8 @@ class ChladniSolverFunction(torch.autograd.Function):
         h_wp = ctx.h_wp
         w_complex = ctx.w_complex
 
-        # 组装从 Loss 传回的复数梯度
         grad_w_complex = grad_wr.cpu().numpy().flatten() + 1j * grad_wi.cpu().numpy().flatten()
 
-        # 调用你的伴随求解器
         grad_h, grad_fr, grad_omega = solver.compute_adjoint_gradient(
             h_wp, w_complex, grad_w_complex
         )
@@ -113,9 +102,6 @@ def main(resume_step=None, num_sources=1):
     output_dir = f"./train_results/sources_{num_sources}"
     os.makedirs(output_dir, exist_ok=True)
 
-    # ==========================================
-    # 1. 物理引擎与数据初始化
-    # ==========================================
     p = PlateParams()
     p.E, p.nu, p.rho = 70.0e9, 0.33, 2700.0
     p.dx = p.dy = L / N
@@ -198,7 +184,6 @@ def main(resume_step=None, num_sources=1):
     ax_loss.grid(True, linestyle='--', alpha=0.6)
     ax_loss.legend()
 
-    # 原汁原味的绘图更新函数
     def update_visualization(h_phys_tensor, w_complex_np, force_np, step_idx, freq_hz, loss_value, phase="Train"):
         h_phys_np = h_phys_tensor.detach().cpu().numpy().reshape(N, N)
         amp = np.abs(w_complex_np).reshape(N, N)
@@ -209,14 +194,16 @@ def main(resume_step=None, num_sources=1):
         if norm > 1e-12:
             display = display / norm
 
-        masked_h = np.ma.masked_where(h_phys_np < MIN_H, h_phys_np)
-        masked_display = np.ma.masked_where(h_phys_np < MIN_H, display)
+        is_void = h_phys_np <= MIN_H
+        masked_h = np.ma.masked_where(is_void, h_phys_np)
+        masked_display = np.ma.masked_where(is_void, display)
         im1.set_data(masked_display)
 
-        material_mask = 1 / (1 + np.exp(-((h_phys_np - MIN_H) * 1e4))) # 与计算图保持一致
+        material_mask_vis = (~is_void).astype(np.float32)
         penalty_value = 100000.0
-        effective_amp = amp * material_mask + penalty_value * (1.0 - material_mask)
-        im2.set_data(np.log10((effective_amp + 1e-12)).reshape(N, N))
+        effective_amp_vis = amp * material_mask_vis + penalty_value * (1.0 - material_mask_vis)
+        
+        im2.set_data(np.log10((effective_amp_vis + 1e-12)).reshape(N, N))
 
         for c in ax2.collections:
             c.remove()
@@ -225,8 +212,8 @@ def main(resume_step=None, num_sources=1):
         if non_zero_energy.size > 0:
             threshold = np.percentile(non_zero_energy, 10)
             ax2.contour(X_grid, Y_grid, energy_field, levels=[threshold], colors='white', linewidths=1.5)
+        
         im2.set_clim(np.min(np.log10(amp + 1e-12)), np.max(np.log10(amp + 1e-12)))
-
         im3.set_data(masked_h * 1000.0)
         im4.set_data(force_np.reshape(N, N))
 
@@ -235,15 +222,11 @@ def main(resume_step=None, num_sources=1):
         fig.canvas.flush_events()
 
 
-    # ==========================================
-    # 3. 干净的主训练循环
-    # ==========================================
+
     for step in range(max_steps):
         
-        # --- 扫频逻辑 (保持外层扫频以对齐共振峰) ---
         if step > 0 and step % FREQ_SWEEP_INTERVAL == 0:
             with torch.no_grad():
-                # 扫频时锁定当前物理参数
                 h_phys_eval = torch.sigmoid(raw_rho) * (MAX_H - MIN_H) + MIN_H
                 pos_eval = torch.sigmoid(raw_pos) * 0.8 + 0.1
                 force_eval = generate_gaussian_force(N, pos_eval)
@@ -275,38 +258,30 @@ def main(resume_step=None, num_sources=1):
                 print(f"[Freq Sweep] Step {step:04d} | Best Freq: {best_freq:.2f} Hz | Loss: {best_loss:.6f}")
 
 
-        # --- 正常梯度下降步 ---
         optimizer.zero_grad()
 
-        # 映射无界参数到物理范围
         h_phys = torch.sigmoid(raw_rho) * (MAX_H - MIN_H) + MIN_H
         pos = torch.sigmoid(raw_pos) * 0.8 + 0.1
         force_tensor = generate_gaussian_force(N, pos)
         omega = torch.tensor([best_freq * 2.0 * np.pi], device="cuda", requires_grad=True)
 
-        # PyTorch 自动算子封装
         wr, wi = ChladniSolverFunction.apply(h_phys, force_tensor, omega, chladni_solver, p, fi_wp)
         amp = torch.sqrt(wr**2 + wi**2 + 1e-12)
         
-        # 损失计算
         curr_loss, l1, l2, l3, l4, display = evaluate_loss(h_phys, amp, target_pattern)
 
-        # 核心的反向传播 (没有噪声，纯净解析梯度)
         curr_loss.backward()
 
-        # 梯度截断，保护参数在合理空间游走
         torch.nn.utils.clip_grad_norm_([raw_rho, raw_pos], max_norm=5.0)
 
         optimizer.step()
 
-        # --- 日志与界面更新 ---
         w_complex_np = wr.detach().cpu().numpy().flatten() + 1j * wi.detach().cpu().numpy().flatten()
         force_np = force_tensor.detach().cpu().numpy()
         
         loss_val = curr_loss.item()
         print(f"Step {step:04d} | Loss: {loss_val:.6f} | Freq: {best_freq:.1f}Hz")
         
-        # 记录 Loss 历史
         loss_history.append(loss_val)
         loss_history_l1.append(l1.item())
         loss_history_l2.append(l2.item())
